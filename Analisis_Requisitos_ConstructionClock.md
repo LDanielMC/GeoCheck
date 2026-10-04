@@ -59,7 +59,7 @@ Es una app de **control de asistencia automatizado por geolocalización (geofenc
 | RF-18 | El sistema debe permitir agregar **notas, fotos y tareas** a un proyecto para dar seguimiento al avance. |
 | RF-19 | El sistema debe permitir asignar **tareas** a empleados o cuadrillas dentro de un proyecto. |
 | RF-20 | El sistema debe permitir definir **horas de labor presupuestadas** por proyecto y mostrar el avance real vs. presupuesto (costo de mano de obra en vivo). |
-| RF-21 | El sistema debe soportar **creación automática de proyectos** (plan superior) — probablemente basada en detección de nuevas ubicaciones frecuentadas por la cuadrilla. |
+| RF-21 | El sistema debe soportar **creación automática de proyectos** — probablemente basada en detección de nuevas ubicaciones frecuentadas por la cuadrilla. (En el original es de plan de pago; aquí estará disponible para todos, sin planes.) |
 
 ### 2.4 Nómina y reportes
 | ID | Requisito |
@@ -83,7 +83,7 @@ Es una app de **control de asistencia automatizado por geolocalización (geofenc
 |---|---|
 | RF-31 | El admin debe poder **invitar empleados** mediante un link/código asociado a la empresa. |
 | RF-32 | El sistema debe soportar **onboarding sin fricción** (sin requerir capacitación) — relevante para el diseño de UX, no solo backend. |
-| RF-33 | El sistema debe permitir gestionar (agregar/quitar) usuarios en cualquier momento, reflejándose en la facturación (modelo por usuario activo). |
+| RF-33 | El sistema debe permitir gestionar (agregar/quitar) usuarios en cualquier momento. **No hay facturación**: la app es gratuita, sin planes, sin cobro por usuario y sin pasarela de pago. |
 
 ### 2.7 Integraciones adicionales
 | ID | Requisito |
@@ -137,7 +137,7 @@ Es una app de **control de asistencia automatizado por geolocalización (geofenc
 | ID | Requisito |
 |---|---|
 | RNF-15 | El backend debe soportar múltiples organizaciones (multi-tenant) con aislamiento de datos entre empresas clientes. |
-| RNF-16 | Debe escalar desde 1 usuario ("Solo") hasta equipos grandes multi-departamento ("Pro"), sin degradar rendimiento en mapas en vivo con muchos usuarios simultáneos. |
+| RNF-16 | Debe escalar desde 1 usuario hasta equipos grandes multi-departamento, sin degradar rendimiento en mapas en vivo con muchos usuarios simultáneos, **manteniendo costos de infraestructura mínimos** (ver sección 5). |
 
 ### 3.6 Compatibilidad
 | ID | Requisito |
@@ -168,21 +168,30 @@ Es una app de **control de asistencia automatizado por geolocalización (geofenc
 
 ---
 
-## 5. Modelo de negocio observado (referencia para tu propio pricing)
+## 5. Modelo de negocio: app 100% gratuita
 
-| Plan | Precio | Público | Incluye |
-|---|---|---|---|
-| Solo | Gratis | Un solo usuario | Clock in/out automático, fotos/notas/tareas, horario, horas y costos |
-| Team | $12/usuario/mes | Equipos en crecimiento | Todo Solo + tracking automático de equipo, creación automática de proyectos, integraciones de nómina, acceso web, acceso gratis para contador |
-| Pro | $18/usuario/mes | Multi-departamento | Todo Team + almacenamiento ilimitado, integraciones custom, soporte prioritario |
+**Decisión de producto:** la app **no será de paga**. No habrá planes (Solo/Team/Pro), suscripciones, cobro por usuario, compras dentro de la app ni pasarela de pago. Todas las funcionalidades estarán disponibles para todos los usuarios.
 
-Modelo: **freemium + precio por usuario activo**, con descuento ~17% en plan anual.
+Referencia (modelo del original, **no se adopta**): freemium con Solo gratis, Team $12/usuario/mes y Pro $18/usuario/mes.
+
+### Implicaciones de diseño
+- **Sin módulo de facturación**: no se implementa gestión de planes, límites por plan, ni Stripe/IAP.
+- **Costos de infraestructura mínimos**, usando capas gratuitas:
+  - Backend/BD/auth: Supabase o Firebase (capa gratuita), o servidor propio liviano.
+  - Fotos: Supabase Storage / Firebase Storage con compresión en cliente y límite de tamaño por foto.
+  - Mapas: OpenStreetMap + MapLibre/Leaflet en vez de Google Maps (que cobra por uso).
+  - Geofencing: APIs nativas del SO (gratuitas), sin servicios de pago.
+  - Notificaciones: FCM/APNs (gratuitos).
+- **Sin anuncios ni venta de datos**: coherente con RNF-07 (privacidad de ubicación).
+- **Límites técnicos razonables** (en vez de límites comerciales): cuota de almacenamiento por organización y retención de fotos, para controlar costos.
+- **Integraciones de pago de terceros** (QuickBooks, Xero, Payworks) quedan fuera del alcance inicial; se prioriza exportación XLSX/PDF/CSV (gratuita).
+- **Sostenibilidad** (a definir): al ser gratuita, considerar donaciones voluntarias, código abierto o auto-hospedaje si los costos crecen. Cuenta de desarrollador: Google Play ($25 único) y Apple Developer ($99/año) son costos inevitables para publicar; se puede distribuir primero como APK / PWA web para evitarlos.
 
 ---
 
 ## 6. Siguientes pasos sugeridos para tu diseño
 
-1. **Definir tu diferenciador** — igualar 1:1 a un competidor establecido rara vez gana mercado; identifica qué haces distinto (¿nicho geográfico, integración con software local, precio, UX más simple, feature que ellos no tienen como chat interno ya lanzado en vez de "coming soon"?).
+1. **Definir tu diferenciador** — igualar 1:1 a un competidor establecido rara vez gana mercado; tu precio ya es un diferenciador (gratis); refuerza con otro (¿nicho geográfico, integración con software local, UX más simple, feature que ellos no tienen como chat interno ya lanzado en vez de "coming soon"?).
 2. **Priorizar el MVP**: con lo anterior, el núcleo mínimo viable sería RF-01 a RF-11 (proyectos, geofencing, clock in/out automático y manual, edición de horas) + RNF-01, 05, 07, 12 (batería, offline, privacidad, usabilidad). El resto (integraciones contables, mapa en vivo, tareas/notas) puede ir en iteraciones posteriores.
 3. **Definir la pila técnica** según si quieres nativo (Swift/Kotlin) o multiplataforma (React Native/Flutter) — dado que el diferenciador no está en el rendimiento gráfico sino en geofencing confiable y batería, Flutter o React Native con buenos plugins de geolocalización en background es viable.
 4. **Validar requisitos legales locales** de geolocalización de empleados antes de lanzar (varía mucho por país/estado).
