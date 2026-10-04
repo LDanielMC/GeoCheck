@@ -1,5 +1,31 @@
 {
-  "plugins": [
-    "expo-secure-store"
-  ]
+  "expo": {
+    "name": "GeoCheck",
+    "slug": "geocheck",
+    "version": "0.1.0",
+    "scheme": "geocheck",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.cliche.geocheck",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.cliche.geocheck"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "GeoCheck usa tu ubicación para registrar tus horas automáticamente cuando llegas y sales de la obra, incluso con la app cerrada.",
+          "locationAlwaysPermission": "GeoCheck usa tu ubicación para registrar tus horas automáticamente cuando llegas y sales de la obra, incluso con la app cerrada.",
+          "locationWhenInUsePermission": "GeoCheck usa tu ubicación para saber si estás dentro de la obra.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
+        }
+      ]
+    ]
+  }
 }

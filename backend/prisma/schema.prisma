@@ -1,15 +1,16 @@
-// Prisma schema — App de control de horas para construcción
-// Basado en el modelo de datos del Análisis de Requisitos
+// Prisma schema — GeoCheck (control de horas por geofencing para construcción)
+// Rebanada 0: base multi-tenant (organizaciones, usuarios con rol, invitaciones)
+// más el mínimo de Project y TimeEntry que ya usa el código.
+// Crew, Break, Task, Schedule y PayPeriod vuelven con la rebanada que los necesite.
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  extensions = [postgis]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // Supabase: cadena con pooler (?pgbouncer=true)
+  directUrl = env("DIRECT_URL") // conexión directa; la usan las migraciones
 }
 
 enum UserRole {
@@ -26,106 +27,82 @@ enum TimeEntryType {
 }
 
 model Organization {
-  id         String   @id @default(uuid())
-  name       String
-  payCycle   String   @default("weekly") // weekly | biweekly | monthly
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
 
-  users      User[]
-  crews      Crew[]
-  projects   Project[]
-  payPeriods PayPeriod[]
+  users       User[]
+  invitations Invitation[]
+  projects    Project[]
 }
 
 model User {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-  crewId         String?
-  crew           Crew?    @relation(fields: [crewId], references: [id])
   name           String
-  email          String   @unique
+  email          String       @unique // siempre en minúsculas (la API lo normaliza)
   passwordHash   String
-  role           UserRole @default(EMPLOYEE)
-  createdAt      DateTime @default(now())
+  role           UserRole     @default(EMPLOYEE)
+  invitationId   String? // con qué invitación se unió (null si creó la organización)
+  invitation     Invitation?  @relation("InvitationJoined", fields: [invitationId], references: [id])
+  createdAt      DateTime     @default(now())
 
-  timeEntries      TimeEntry[] @relation("EntryOwner")
-  editedEntries    TimeEntry[] @relation("EntryEditor")
-  schedules        Schedule[]
+  invitationsCreated Invitation[] @relation("InvitationCreator")
+  timeEntries        TimeEntry[]  @relation("EntryOwner")
+  editedEntries      TimeEntry[]  @relation("EntryEditor")
+
+  @@index([organizationId])
 }
 
-model Crew {
-  id             String   @id @default(uuid())
+model Invitation {
+  id             String       @id @default(uuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-  name           String
+  code           String       @unique // 8 caracteres sin I/L/O/0/1, fácil de dictar
+  role           UserRole     @default(EMPLOYEE) // la API nunca permite ADMIN
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdById    String
+  createdBy      User         @relation("InvitationCreator", fields: [createdById], references: [id])
+  createdAt      DateTime     @default(now())
 
-  members        User[]
+  users User[] @relation("InvitationJoined")
+
+  @@index([organizationId])
 }
 
 model Project {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
   name           String
   latitude       Float
   longitude      Float
-  geofenceRadius Int      @default(120) // metros
-  budgetHours    Float?
-  archived       Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  geofenceRadius Int          @default(120) // metros; la API limita a 20–1000
+  archived       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
 
-  timeEntries    TimeEntry[]
-  tasks          Task[]
-  schedules      Schedule[]
+  timeEntries TimeEntry[]
+
+  @@index([organizationId, archived])
 }
 
 model TimeEntry {
-  id          String        @id @default(uuid())
-  userId      String
-  user        User          @relation("EntryOwner", fields: [userId], references: [id])
-  projectId   String
-  project     Project       @relation(fields: [projectId], references: [id])
-  type        TimeEntryType @default(AUTO)
-  clockIn     DateTime
-  clockOut    DateTime?
-  editedById  String?
-  editedBy    User?         @relation("EntryEditor", fields: [editedById], references: [id])
-  editedAt    DateTime?
+  id         String        @id @default(uuid())
+  userId     String
+  user       User          @relation("EntryOwner", fields: [userId], references: [id])
+  projectId  String
+  project    Project       @relation(fields: [projectId], references: [id])
+  type       TimeEntryType @default(AUTO)
+  clockIn    DateTime
+  clockOut   DateTime?
+  editedById String?
+  editedBy   User?         @relation("EntryEditor", fields: [editedById], references: [id])
+  editedAt   DateTime?
 
-  breaks      Break[]
-}
-
-model Break {
-  id          String    @id @default(uuid())
-  timeEntryId String
-  timeEntry   TimeEntry @relation(fields: [timeEntryId], references: [id])
-  start       DateTime
-  end         DateTime?
-}
-
-model Task {
-  id        String  @id @default(uuid())
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
-  title     String
-  status    String  @default("pending") // pending | in_progress | done
-}
-
-model Schedule {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  startTime DateTime
-  endTime   DateTime
-}
-
-model PayPeriod {
-  id             String   @id @default(uuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  frequency      String   // weekly | biweekly | monthly
-  startDate      DateTime
+  @@index([userId, clockIn])
+  @@index([projectId, clockIn])
+  // Además, en el SQL de la migración (Prisma no expresa índices parciales):
+  //   CREATE UNIQUE INDEX "TimeEntry_one_open_per_user" ON "TimeEntry"("userId") WHERE "clockOut" IS NULL;
 }

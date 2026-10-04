@@ -1,70 +1,150 @@
-# TimeTrack App — Esqueleto del proyecto
+# GeoCheck — control de horas por geofencing para construcción
 
-App de control de horas por geofencing para construcción (alternativa a ConstructionClock).
-Basado en `Analisis_Requisitos_ConstructionClock.md` y `User_Stories.md`.
+App **gratuita** de control de asistencia por geolocalización para cuadrillas de construcción
+(alternativa a ConstructionClock). Basada en [Analisis_Requisitos_ConstructionClock.md](Analisis_Requisitos_ConstructionClock.md)
+y [User_Stories.md](User_Stories.md).
 
 ## Estructura
 
 ```
-timetrack-app/
-├── backend/          Node.js + Express + TypeScript + Prisma (PostgreSQL/PostGIS)
-│   ├── prisma/schema.prisma   Modelo de datos completo
-│   └── src/
-│       ├── routes/            Endpoints REST (projects, time-entries)
-│       ├── services/          Lógica de negocio (clock-in/out, geofencing)
-│       └── utils/geofence.ts  Cálculo de distancia haversine
-└── mobile/           React Native (Expo)
-    └── src/
-        ├── screens/ClockScreen.tsx      Pantalla de fichaje del empleado
-        └── services/geofenceService.ts  Geofencing en segundo plano
+├── docker-compose.yml     Postgres 16 local
+├── backend/               Node.js + Express + TypeScript + Prisma (PostgreSQL)
+│   ├── prisma/            schema.prisma y migraciones
+│   ├── src/
+│   │   ├── routes/        Endpoints REST (auth, invitations, projects, time-entries)
+│   │   ├── services/      Lógica de negocio
+│   │   ├── middleware/    authenticate + requireRole (JWT y roles)
+│   │   ├── config.ts      Validación de variables de entorno (falla rápido)
+│   │   └── seed.ts        Datos de demostración
+│   └── tests/             Tests de integración (vitest + supertest)
+└── mobile/                React Native (Expo SDK 54)
+    ├── app.json           Permisos de ubicación en segundo plano, ids de la app
+    ├── eas.json           Perfiles de build: development / preview / production
+    └── src/               Pantallas, contexto de sesión y servicios
 ```
 
-## Cómo arrancar
+## Requisitos
 
-### 1. Backend
+- Node.js 20 o superior (probado con 24).
+- Docker Desktop. **En Windows requiere WSL2**: en un PowerShell de administrador ejecuta `wsl --install`
+  y reinicia. Sin WSL, Docker Desktop no arranca.
+- Un teléfono Android con [Expo Go](https://expo.dev/go) para probar la app.
+
+## Arranque
+
+### 1. Base de datos
+
+```bash
+docker compose up -d        # Postgres 16 en localhost:5432 (usuario/clave/base: geocheck)
+```
+
+### 2. Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env
-# Edita .env con tu DATABASE_URL real y un JWT_SECRET propio
-npx prisma migrate dev --name init
-npm run dev
+cp .env.example .env        # ya apunta al Postgres de Docker; el JWT_SECRET de ejemplo solo sirve en desarrollo
+npx prisma migrate dev      # crea las tablas
+npm run seed                # organización demo con admin, supervisor y empleado
+npm run dev                 # http://localhost:3000  (GET /health comprueba también la BD)
 ```
 
-Necesitas una base de datos PostgreSQL con la extensión PostGIS habilitada.
-Localmente: `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=pass postgis/postgis`
-En producción (barato): Railway o Supabase ya ofrecen PostGIS integrado.
+Cuentas del seed (contraseña `Demo1234!`): `admin@demo.com`, `supervisor@demo.com`, `empleado@demo.com`.
 
-### 2. Mobile
+> npm 12 no ejecuta por defecto los scripts de instalación de las dependencias. Si Prisma se queja de
+> que falta el cliente o el motor, ejecuta `npx prisma generate`.
+
+El servidor se niega a arrancar (con un mensaje claro) si falta `DATABASE_URL` o `JWT_SECRET`, si este tiene
+menos de 32 caracteres, o si no puede conectar con la base de datos.
+
+### 3. App móvil (Expo Go)
 
 ```bash
 cd mobile
 npm install
-npx expo start
+npm start                   # abre Metro para Expo Go; escanea el QR con la app Expo Go
 ```
 
-Escanea el QR con la app Expo Go en tu teléfono (Android o iOS) para probar sin necesidad de compilar nativo.
+El teléfono y la PC deben estar en la misma red. La app deduce la IP del backend de la dirección de Metro
+(puerto 3000). Si no conecta, permite Node.js en el firewall de Windows para redes privadas.
 
-## Qué ya está implementado (MVP, fase 1)
+Desde Expo Go funcionan registro, login, unirse con código e invitaciones. **El geofencing en segundo plano
+no funciona en Expo Go**: necesita un development build (siguiente sección).
 
-- Modelo de datos completo (`schema.prisma`)
-- Clock-in/out automático por geofence + manual (`timeEntryService.ts`, `ClockScreen.tsx`)
-- Fichaje delegado por supervisor (`delegatedClockIn`)
-- Edición de horas con auditoría (`editTimeEntry`)
-- Creación de proyectos con geofence configurable (`routes/projects.ts`)
-- Geofencing nativo en segundo plano, bajo consumo de batería (`geofenceService.ts`)
+## Development build (para el spike de geofencing)
 
-## Qué falta (siguiente sprint)
+El proyecto ya está preparado: `expo-dev-client`, permisos de ubicación en segundo plano en `app.json`
+(plugin `expo-location`) y `eas.json` con el perfil `development`.
 
-- Autenticación (login, invitaciones — RF-31, RF-32)
-- Pantalla de mapa en vivo del supervisor
-- Pantalla de timesheets/reportes del admin + exportación XLSX/PDF (RF-24)
-- Modo offline con sincronización diferida (RNF-05)
-- Cálculo de horas extra (RF-13)
-- Pausas/almuerzo (RF-09, RF-27)
+```bash
+cd mobile
+npm install -g eas-cli      # una sola vez
+eas login                   # tu cuenta de Expo (gratuita)
+eas init                    # enlaza el proyecto; escribe el projectId en app.json
+npm run build:dev:android   # build en la nube (plan gratuito de EAS) → APK que instalas en el teléfono
+npm run start:dev           # Metro para el development build
+```
 
-## Referencia
+Identificadores: `com.cliche.geocheck` (Android e iOS).
 
-Ver `Analisis_Requisitos_ConstructionClock.md` para la lista completa de RF/RNF,
-y `User_Stories.md` para las historias de usuario con prioridad MVP/Fase 2.
+Builds `preview` y `production` no tienen Metro: define la URL del backend desplegado como variable
+`EXPO_PUBLIC_API_URL` (por ejemplo en `eas.json` → `build.<perfil>.env`). Si falta, la app muestra un error
+claro en vez de intentar conectar a localhost.
+
+Antes de publicar en Google Play hay que declarar el uso de ubicación en segundo plano (formulario de
+permisos de la Play Console) y mostrar una explicación previa dentro de la app. Para pruebas internas
+basta con subir el `.aab` (`production`) a la pista de pruebas internas.
+
+## Tests
+
+```bash
+cd backend
+npm test                    # vitest + supertest
+npm run typecheck           # tsc --noEmit
+```
+
+Los tests usan una base **separada** (`geocheck_test`, en el mismo Postgres de Docker): la crean y migran
+solos, y se niegan a correr contra cualquier base cuyo nombre no termine en `_test`. Si `DATABASE_URL` no es
+local (por ejemplo Supabase), define `TEST_DATABASE_URL` con una base de pruebas.
+
+## Apuntar a Supabase
+
+1. En `backend/.env`, comenta las URL de Docker y descomenta las de Supabase (ver `.env.example`):
+   `DATABASE_URL` = pooler de transacciones (puerto 6543, con `?pgbouncer=true`) y
+   `DIRECT_URL` = pooler de sesión o conexión directa (puerto 5432), que usan las migraciones.
+2. La base debe estar vacía o reseteada (`npx prisma migrate reset`): el schema cambió respecto al primer esqueleto.
+3. `npx prisma migrate deploy`.
+
+## API (rebanada 0)
+
+| Método y ruta | Quién | Qué hace |
+|---|---|---|
+| `POST /auth/register-organization` | público | Crea la organización y su ADMIN |
+| `POST /auth/login` | público | Devuelve `{ token, user }` |
+| `POST /auth/join` | público | Se une con un código de invitación (rol y organización los define el código) |
+| `GET /auth/me` | autenticado | Usuario actual con su organización |
+| `POST /invitations` | ADMIN | Genera código (rol EMPLOYEE/SUPERVISOR/BOOKKEEPER, 1–30 días) |
+| `GET /invitations` | ADMIN | Lista con estado y cuántas personas se unieron |
+| `DELETE /invitations/:id` | ADMIN | Revoca el código |
+| `POST /projects`, `GET /projects` | ADMIN / todos | Proyectos con ubicación y radio (20–1000 m) |
+| `POST /time-entries/clock-in`, `/:id/clock-out` | ADMIN, SUPERVISOR, EMPLOYEE | Fichaje propio |
+| `POST /time-entries/delegated-clock-in`, `PATCH /time-entries/:id` | ADMIN, SUPERVISOR | Fichar por otros y editar horas |
+
+Autenticación: `Authorization: Bearer <token>`. Quién actúa y a qué organización pertenece se toma del token
+(nunca del body); un recurso de otra organización responde 404. `/auth/register-organization`, `/auth/login` y
+`/auth/join` limitan a 10 intentos **fallidos** por minuto y por IP (`AUTH_RATE_LIMIT_MAX`).
+
+## Estado
+
+**Hecho:** rebanada 0 (base multi-tenant, auth con roles, invitaciones, tests, entorno Docker, app lista para
+development build).
+
+**Siguiente:**
+1. Spike de geofencing: entrada y salida de una geocerca con la app cerrada, en un Android real
+   (permisos, precisión y batería). iOS después.
+2. Rebanada 1: proyectos (crear con mapa, editar, archivar).
+3. Rebanada 2 (fichaje con ubicación), 3 (offline y batería), 4 (reportes y exportación), 5 (supervisor y mapa en vivo).
+
+Pendiente conocido: `mobile/src/services/geofenceService.ts` llama a endpoints que aún no existen
+(`/time-entries/exit/:id`); el spike y la rebanada 2 definen el contrato real. `ClockScreen` es una maqueta
+y todavía no se muestra en la app.

@@ -1,0 +1,23 @@
+# Postgres local para desarrollo. Uso: docker compose up -d
+# La base de pruebas (geocheck_test) la crea `npm test` si no existe.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: geocheck-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: geocheck
+      POSTGRES_PASSWORD: geocheck
+      POSTGRES_DB: geocheck
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - geocheck-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geocheck -d geocheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  geocheck-pgdata:

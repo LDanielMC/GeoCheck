@@ -1,23 +1,37 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import timeEntriesRouter from "./routes/timeEntries";
-import projectsRouter from "./routes/projects";
-import authRouter from "./routes/auth";
+import { createApp } from "./app";
+import { getConfig, type Config } from "./config";
+import { prisma } from "./db";
 
-dotenv.config();
+async function main() {
+  // Falla rápido y con un mensaje claro si falta algo (en vez de romperse en el primer login).
+  let config: Config;
+  try {
+    config = getConfig();
+  } catch (err) {
+    console.error((err as Error).message);
+    process.exit(1);
+  }
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+  try {
+    await prisma.$connect();
+  } catch {
+    console.error(
+      "No se pudo conectar a la base de datos. Revisa DATABASE_URL en .env y que Postgres esté arriba (docker compose up -d)."
+    );
+    process.exit(1);
+  }
 
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
+  const server = createApp().listen(config.PORT, () => {
+    console.log(`Backend corriendo en http://localhost:${config.PORT}`);
+  });
 
-app.use("/time-entries", timeEntriesRouter);
-app.use("/projects", projectsRouter);
-app.use("/auth", authRouter);
+  const shutdown = () => {
+    server.close(() => {
+      void prisma.$disconnect().finally(() => process.exit(0));
+    });
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Backend corriendo en http://localhost:${PORT}`);
-});
+void main();

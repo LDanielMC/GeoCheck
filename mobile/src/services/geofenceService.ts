@@ -16,24 +16,28 @@ interface ActiveProject {
   geofenceRadius: number;
 }
 
-TaskManager.defineTask(GEOFENCE_TASK, ({ data, error }: any) => {
+// OJO: estos endpoints (/time-entries/exit/:id y clock-in sin lat/lon) todavía no existen en el
+// backend; el spike de geofencing y la rebanada 2 definen el contrato real.
+TaskManager.defineTask(GEOFENCE_TASK, async ({ data, error }: any) => {
   if (error) {
     console.error("Error en tarea de geofence:", error);
     return;
   }
   if (data) {
     const { eventType, region } = data;
-    if (eventType === Location.GeofencingEventType.Enter) {
-      // RF-03: clock-in automático
-      api.post("/time-entries/clock-in", {
-        projectId: region.identifier,
-        type: "AUTO",
-      }).catch((e) => console.error("Error en clock-in automático:", e));
-    } else if (eventType === Location.GeofencingEventType.Exit) {
-      // RF-04: clock-out automático (requiere buscar la entrada abierta primero)
-      api.post(`/time-entries/exit/${region.identifier}`).catch((e) =>
-        console.error("Error en clock-out automático:", e)
-      );
+    try {
+      if (eventType === Location.GeofencingEventType.Enter) {
+        // RF-03: clock-in automático
+        await api.post("/time-entries/clock-in", {
+          projectId: region.identifier,
+          type: "AUTO",
+        });
+      } else if (eventType === Location.GeofencingEventType.Exit) {
+        // RF-04: clock-out automático (requiere buscar la entrada abierta primero)
+        await api.post(`/time-entries/exit/${region.identifier}`);
+      }
+    } catch (e) {
+      console.error("Error en fichaje automático:", e);
     }
   }
 });

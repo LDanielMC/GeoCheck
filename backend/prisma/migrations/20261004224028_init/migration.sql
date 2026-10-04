@@ -1,6 +1,3 @@
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "postgis";
-
 -- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'SUPERVISOR', 'EMPLOYEE', 'BOOKKEEPER');
 
@@ -11,7 +8,6 @@ CREATE TYPE "TimeEntryType" AS ENUM ('AUTO', 'MANUAL', 'DELEGATED');
 CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "payCycle" TEXT NOT NULL DEFAULT 'weekly',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
@@ -21,23 +17,28 @@ CREATE TABLE "Organization" (
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "organizationId" TEXT NOT NULL,
-    "crewId" TEXT,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'EMPLOYEE',
+    "invitationId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Crew" (
+CREATE TABLE "Invitation" (
     "id" TEXT NOT NULL,
     "organizationId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'EMPLOYEE',
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "revokedAt" TIMESTAMP(3),
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Crew_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Invitation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -48,7 +49,6 @@ CREATE TABLE "Project" (
     "latitude" DOUBLE PRECISION NOT NULL,
     "longitude" DOUBLE PRECISION NOT NULL,
     "geofenceRadius" INTEGER NOT NULL DEFAULT 120,
-    "budgetHours" DOUBLE PRECISION,
     "archived" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -69,58 +69,38 @@ CREATE TABLE "TimeEntry" (
     CONSTRAINT "TimeEntry_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Break" (
-    "id" TEXT NOT NULL,
-    "timeEntryId" TEXT NOT NULL,
-    "start" TIMESTAMP(3) NOT NULL,
-    "end" TIMESTAMP(3),
-
-    CONSTRAINT "Break_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Task" (
-    "id" TEXT NOT NULL,
-    "projectId" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'pending',
-
-    CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Schedule" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "projectId" TEXT NOT NULL,
-    "startTime" TIMESTAMP(3) NOT NULL,
-    "endTime" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Schedule_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "PayPeriod" (
-    "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
-    "frequency" TEXT NOT NULL,
-    "startDate" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "PayPeriod_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE INDEX "User_organizationId_idx" ON "User"("organizationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invitation_code_key" ON "Invitation"("code");
+
+-- CreateIndex
+CREATE INDEX "Invitation_organizationId_idx" ON "Invitation"("organizationId");
+
+-- CreateIndex
+CREATE INDEX "Project_organizationId_archived_idx" ON "Project"("organizationId", "archived");
+
+-- CreateIndex
+CREATE INDEX "TimeEntry_userId_clockIn_idx" ON "TimeEntry"("userId", "clockIn");
+
+-- CreateIndex
+CREATE INDEX "TimeEntry_projectId_clockIn_idx" ON "TimeEntry"("projectId", "clockIn");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_crewId_fkey" FOREIGN KEY ("crewId") REFERENCES "Crew"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_invitationId_fkey" FOREIGN KEY ("invitationId") REFERENCES "Invitation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Crew" ADD CONSTRAINT "Crew_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Project" ADD CONSTRAINT "Project_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -134,17 +114,7 @@ ALTER TABLE "TimeEntry" ADD CONSTRAINT "TimeEntry_projectId_fkey" FOREIGN KEY ("
 -- AddForeignKey
 ALTER TABLE "TimeEntry" ADD CONSTRAINT "TimeEntry_editedById_fkey" FOREIGN KEY ("editedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
-ALTER TABLE "Break" ADD CONSTRAINT "Break_timeEntryId_fkey" FOREIGN KEY ("timeEntryId") REFERENCES "TimeEntry"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Task" ADD CONSTRAINT "Task_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Schedule" ADD CONSTRAINT "Schedule_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Schedule" ADD CONSTRAINT "Schedule_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PayPeriod" ADD CONSTRAINT "PayPeriod_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- Un usuario solo puede tener un fichaje abierto a la vez (evita dobles entradas por
+-- carreras entre dos eventos de geofence o dos toques). Prisma no expresa índices
+-- parciales en el schema, por eso vive aquí.
+CREATE UNIQUE INDEX "TimeEntry_one_open_per_user" ON "TimeEntry"("userId") WHERE "clockOut" IS NULL;

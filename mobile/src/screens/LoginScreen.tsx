@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { useAuth } from "../context/AuthContext";
 import { login } from "../services/authService";
+import { errorMessage } from "../services/errors";
+import { Button, ErrorText, Field, FormScreen, LinkButton } from "../ui";
 
-export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) {
+export default function LoginScreen({ onRegister, onJoin }: { onRegister: () => void; onJoin: () => void }) {
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,49 +15,36 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
     setError(null);
     setLoading(true);
     try {
-      await login(email.trim(), password);
-      onLoginSuccess();
-    } catch (e: any) {
-      setError(e.response?.data?.error || "No se pudo iniciar sesión");
-    } finally {
+      await signIn(await login(email.trim(), password));
+    } catch (e) {
+      setError(errorMessage(e, "No se pudo iniciar sesión"));
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>TimeTrack</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
+    <FormScreen title="GeoCheck" subtitle="Control de horas por ubicación">
+      <Field
+        label="Correo electrónico"
+        placeholder="tu@correo.com"
         autoCapitalize="none"
+        autoComplete="email"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
-      <TextInput
-        style={styles.input}
+      <Field
+        label="Contraseña"
         placeholder="Contraseña"
         secureTextEntry
+        autoComplete="password"
         value={password}
         onChangeText={setPassword}
       />
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Iniciar sesión</Text>}
-      </TouchableOpacity>
-    </View>
+      <ErrorText message={error} />
+      <Button title="Iniciar sesión" onPress={handleLogin} loading={loading} disabled={!email.trim() || !password} />
+      <LinkButton title="Tengo un código de invitación" onPress={onJoin} />
+      <LinkButton title="Crear una organización nueva" onPress={onRegister} />
+    </FormScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, justifyContent: "center", gap: 12 },
-  title: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 24 },
-  input: { borderWidth: 1, borderColor: "#DDD", borderRadius: 8, padding: 12, fontSize: 14 },
-  error: { color: "#E24B4A", fontSize: 12, textAlign: "center" },
-  button: { backgroundColor: "#3B6D11", borderRadius: 8, padding: 12, alignItems: "center" },
-  buttonText: { color: "white", fontSize: 14, fontWeight: "500" },
-});
