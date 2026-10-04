@@ -17,7 +17,7 @@ y [User_Stories.md](User_Stories.md).
 │   │   ├── config.ts      Validación de variables de entorno (falla rápido)
 │   │   └── seed.ts        Datos de demostración
 │   └── tests/             Tests de integración (vitest + supertest)
-└── mobile/                React Native (Expo SDK 54)
+└── mobile/                React Native (Expo SDK 57)
     ├── app.json           Permisos de ubicación en segundo plano, ids de la app
     ├── eas.json           Perfiles de build: development / preview / production
     └── src/               Pantallas, contexto de sesión y servicios

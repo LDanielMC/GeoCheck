@@ -25,7 +25,8 @@
           "isAndroidForegroundServiceEnabled": true,
           "isIosBackgroundLocationEnabled": true
         }
-      ]
+      ],
+      "expo-status-bar"
     ]
   }
 }
