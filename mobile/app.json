@@ -11,7 +11,15 @@
       "supportsTablet": false
     },
     "android": {
-      "package": "com.cliche.geocheck"
+      "package": "com.cliche.geocheck",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ]
     },
     "plugins": [
       "expo-secure-store",
@@ -26,7 +34,14 @@
           "isIosBackgroundLocationEnabled": true
         }
       ],
-      "expo-status-bar"
-    ]
+      "expo-status-bar",
+      "expo-sharing"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f18e1210-9cc0-4ab5-a0ec-8d7c00d69302"
+      }
+    },
+    "owner": "danielmcam"
   }
 }

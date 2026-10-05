@@ -21,6 +21,12 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "spike": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_SPIKE": "1"
+      }
     }
   },
   "submit": {

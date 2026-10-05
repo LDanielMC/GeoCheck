@@ -71,7 +71,22 @@ El teléfono y la PC deben estar en la misma red. La app deduce la IP del backen
 Desde Expo Go funcionan registro, login, unirse con código e invitaciones. **El geofencing en segundo plano
 no funciona en Expo Go**: necesita un development build (siguiente sección).
 
-## Development build (para el spike de geofencing)
+## Spike de geofencing
+
+El laboratorio para validar el geofencing en un teléfono real (permisos, latencia, falsos positivos y batería)
+está en `mobile/src/screens/GeofenceLabScreen.tsx`. Guía de campo, protocolo por escenario y criterios:
+**[docs/spike-geofencing.md](docs/spike-geofencing.md)**. Resumen:
+
+```bash
+cd mobile
+npm run build:spike:android   # APK release con el JS embebido (perfil "spike" de eas.json)
+```
+
+Las pruebas con la app cerrada deben hacerse con ese APK, **no** con el development build: este necesita Metro
+para cargar el JS y, sin él, el evento de geocerca no tiene código que ejecutar.
+
+## Development build
+
 
 El proyecto ya está preparado: `expo-dev-client`, permisos de ubicación en segundo plano en `app.json`
 (plugin `expo-location`) y `eas.json` con el perfil `development`.
@@ -140,8 +155,8 @@ Autenticación: `Authorization: Bearer <token>`. Quién actúa y a qué organiza
 development build).
 
 **Siguiente:**
-1. Spike de geofencing: entrada y salida de una geocerca con la app cerrada, en un Android real
-   (permisos, precisión y batería). iOS después.
+1. **Spike de geofencing (en curso):** el laboratorio y la guía de campo están listos; falta compilar el APK
+   `spike` y hacer las pruebas en un Android real (permisos, latencia, precisión y batería). iOS después.
 2. Rebanada 1: proyectos (crear con mapa, editar, archivar).
 3. Rebanada 2 (fichaje con ubicación), 3 (offline y batería), 4 (reportes y exportación), 5 (supervisor y mapa en vivo).
 

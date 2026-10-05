@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+// Debe importarse aquí, en el alcance global: cuando el sistema despierta la app cerrada por un evento de
+// geocerca solo se carga este bundle (sin montar la UI) y la tarea tiene que estar ya definida.
+import "./src/spike/geofenceTask";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
+import GeofenceLabScreen from "./src/screens/GeofenceLabScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import InvitationsScreen from "./src/screens/InvitationsScreen";
 import JoinScreen from "./src/screens/JoinScreen";
@@ -41,7 +45,21 @@ function Root() {
   return <SignedInFlow user={state.user} offline={state.offline} />;
 }
 
+// Builds del spike (perfil "spike" de eas.json) y desarrollo con EXPO_PUBLIC_SPIKE=1: solo el laboratorio de
+// geofencing, que no usa sesión ni servidor.
+const SPIKE_MODE = process.env.EXPO_PUBLIC_SPIKE === "1";
+
 export default function App() {
+  if (SPIKE_MODE) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <GeofenceLabScreen />
+          <StatusBar style="auto" />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
   return (
     <SafeAreaProvider>
       <AuthProvider>
