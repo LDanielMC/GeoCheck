@@ -83,7 +83,11 @@ npm run build:spike:android   # APK release con el JS embebido (perfil "spike" d
 ```
 
 Las pruebas con la app cerrada deben hacerse con ese APK, **no** con el development build: este necesita Metro
-para cargar el JS y, sin él, el evento de geocerca no tiene código que ejecutar.
+para cargar el JS y, sin él, el evento de geocerca no tiene código que ejecutar. Hay que recompilarlo cada vez que
+cambian las dependencias nativas (notificaciones, diálogo de batería, pantalla activa).
+
+La lógica del spike se prueba sin teléfono: `cd mobile && npm test` (análisis del log, sesiones, marcadores y tareas en
+segundo plano contra módulos de Expo simulados).
 
 ## Development build
 
@@ -155,8 +159,9 @@ Autenticación: `Authorization: Bearer <token>`. Quién actúa y a qué organiza
 development build).
 
 **Siguiente:**
-1. **Spike de geofencing (en curso):** el laboratorio y la guía de campo están listos; falta compilar el APK
-   `spike` y hacer las pruebas en un Android real (permisos, latencia, precisión y batería). iOS después.
+1. **Spike de geofencing (en curso):** laboratorio con panel en vivo, sesiones, notificaciones de detección y
+   marcadores sin abrir la app; primera prueba de campo hecha (la guía y el análisis se corrigieron con sus datos).
+   Falta recompilar el APK `spike` y completar los escenarios en un Android real. iOS después.
 2. Rebanada 1: proyectos (crear con mapa, editar, archivar).
 3. Rebanada 2 (fichaje con ubicación), 3 (offline y batería), 4 (reportes y exportación), 5 (supervisor y mapa en vivo).
 
