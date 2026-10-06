@@ -114,6 +114,11 @@ Antes de publicar en Google Play hay que declarar el uso de ubicación en segund
 permisos de la Play Console) y mostrar una explicación previa dentro de la app. Para pruebas internas
 basta con subir el `.aab` (`production`) a la pista de pruebas internas.
 
+**Pendiente antes de publicar:** el permiso `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (diálogo de exclusión de batería
+del laboratorio del spike) está restringido por Google Play: o se justifica en la Play Console o se quita de
+`mobile/app.json` y se guía al usuario a los ajustes de batería sin él. De paso, revisar el resto de permisos del
+manifiesto generado.
+
 ## Tests
 
 ```bash
