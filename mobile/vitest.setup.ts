@@ -35,7 +35,7 @@ vi.mock("expo-intent-launcher", () => ({
 vi.mock("expo-keep-awake", () => ({ activateKeepAwakeAsync: vi.fn(async () => undefined), deactivateKeepAwake: vi.fn(async () => undefined) }));
 
 vi.mock("expo-location", () => ({
-  Accuracy: { High: 4, BestForNavigation: 6 },
+  Accuracy: { Balanced: 3, High: 4, BestForNavigation: 6 },
   GeofencingEventType: { Enter: 1, Exit: 2 },
   GeofencingRegionState: { 1: "Inside", 2: "Outside", Inside: 1, Outside: 2 },
   getForegroundPermissionsAsync: vi.fn(async () => ({ status: "granted", granted: true, android: { accuracy: "fine" } })),

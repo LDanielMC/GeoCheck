@@ -18,6 +18,16 @@ const envSchema = z
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
     // Intentos fallidos por minuto y por IP en registro, login y unirse con código.
     AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(10),
+    // Clave de Google para Places API (New), solo de servidor y distinta de la del mapa. Sin ella no hay autocompletado
+    // y la app usa el buscador del teléfono. Una cadena vacía (VAR= en .env) cuenta como no configurada.
+    GOOGLE_PLACES_API_KEY: z
+      .string()
+      .trim()
+      .optional()
+      .transform((key) => key || undefined),
+    // Peticiones de autocompletado por usuario: por minuto y por día (24 h).
+    PLACES_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(60),
+    PLACES_RATE_LIMIT_PER_DAY: z.coerce.number().int().min(1).default(300),
   })
   .refine((env) => !(env.NODE_ENV === "production" && env.JWT_SECRET.includes(DEV_SECRET_MARKER)), {
     path: ["JWT_SECRET"],

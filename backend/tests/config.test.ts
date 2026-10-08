@@ -21,6 +21,13 @@ describe("parseConfig", () => {
     expect(config).toMatchObject({ PORT: 8080, TRUST_PROXY: 1, AUTH_RATE_LIMIT_MAX: 25 });
   });
 
+  it("la clave de Places es opcional (una cadena vacía cuenta como ausente) y los límites tienen valores por defecto", () => {
+    expect(parseConfig(valid)).toMatchObject({ PLACES_RATE_LIMIT_PER_MINUTE: 60, PLACES_RATE_LIMIT_PER_DAY: 300 });
+    expect(parseConfig(valid).GOOGLE_PLACES_API_KEY).toBeUndefined();
+    expect(parseConfig({ ...valid, GOOGLE_PLACES_API_KEY: "  " }).GOOGLE_PLACES_API_KEY).toBeUndefined();
+    expect(parseConfig({ ...valid, GOOGLE_PLACES_API_KEY: " abc ", PLACES_RATE_LIMIT_PER_DAY: "50" })).toMatchObject({ GOOGLE_PLACES_API_KEY: "abc", PLACES_RATE_LIMIT_PER_DAY: 50 });
+  });
+
   it("falla si falta DATABASE_URL", () => {
     expect(() => parseConfig({ JWT_SECRET: valid.JWT_SECRET })).toThrow(/DATABASE_URL/);
   });

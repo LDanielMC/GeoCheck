@@ -24,9 +24,8 @@ const MAX_RESULTS = 3;
 const SAME_PLACE_M = 25;
 
 // Búsqueda por dirección con el geocodificador del propio teléfono (Android: clase Geocoder del sistema; iOS:
-// CLGeocoder). Sin cuenta, sin clave y sin costo, pero sin autocompletar y con calidad que depende del teléfono: se
-// consulta solo al pulsar «Buscar». Si con direcciones reales no basta, esta es la única función que hay que cambiar
-// por una llamada al backend (Google) manteniendo el mismo resultado.
+// CLGeocoder). Sin cuenta, sin clave y sin costo, pero sin autocompletar y con calidad que depende del teléfono. Es el
+// RESPALDO del autocompletado de Google (placesApi.ts): se usa cuando el backend no tiene servicio o no encuentra nada.
 export async function searchAddress(query: string): Promise<AddressResult[]> {
   const text = query.trim();
   if (text.length < MIN_QUERY_LENGTH) {
