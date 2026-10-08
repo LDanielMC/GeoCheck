@@ -22,6 +22,7 @@ Prioridad: 🔴 MVP · 🟡 Fase 2 · ⚪ No prioritario por ahora (según decis
 
 **US-05** 🟡 Como empleado, quiero registrar una pausa de almuerzo, para que se descuente correctamente de mis horas.
 - Criterios: botón de "iniciar pausa" / "terminar pausa"; se resta del total automáticamente. *(RF-09, RF-27)*
+- Nota (2026-10-08): el modo de comida «registro manual» de las reglas de nómina (US-14) depende de estos botones. Pendiente de decidir si suben a MVP o si esa opción no se ofrece hasta la Fase 2 (docs/plan-de-rebanadas.md).
 
 **US-06** 🟡 Como empleado, quiero ver mi horario asignado, para saber cuándo y dónde debo presentarme.
 - Criterios: vista de calendario/lista con proyecto asignado por día. *(RF-29)*
@@ -34,10 +35,12 @@ Prioridad: 🔴 MVP · 🟡 Fase 2 · ⚪ No prioritario por ahora (según decis
 - Criterios: requiere selección explícita del empleado + confirmación; queda registrado como "delegado por [supervisor]". *(RF-06, RNF-20)*
 
 **US-08** 🔴 Como supervisor, quiero ver en un mapa quién está activo y en qué proyecto en este momento, para tener visibilidad de mi cuadrilla.
-- Criterios: mapa en vivo con pines por empleado; refresco cada X segundos. *(RF-10, RF-14)*
+- Criterios: el mapa muestra los proyectos y, en cada uno, quién tiene un fichaje abierto y desde qué hora (según los fichajes, no la posición del teléfono); se actualiza al abrir la pantalla y al refrescar. *(RF-10)*
+- Decisión (2026-10-08): sin ubicación en vivo continua de cada empleado ni historial de rutas (fuera del MVP); la ubicación solo se toma al fichar (RF-15). Por eso RF-14 («mapa en vivo con la ubicación de cada miembro») queda fuera del MVP.
 
-**US-09** 🟡 Como supervisor, quiero editar una entrada de tiempo con error, para corregir olvidos de mi equipo.
-- Criterios: cualquier edición manual queda con registro de auditoría (quién, cuándo, valor anterior). *(RF-08, RNF-20)*
+**US-09** 🔴 Como supervisor, quiero editar una entrada de tiempo con error, para corregir olvidos de mi equipo.
+- Criterios: se hace en el panel web (rebanada W), el supervisor y el admin; el motivo es obligatorio; cualquier edición manual queda con registro de auditoría (quién, cuándo, motivo, valor anterior y nuevo); al corregir se recalculan los totales y el traslado. *(RF-08, RNF-20)*
+- Decisión (2026-10-08): sube de 🟡 a 🔴. Hoy la API edita sin motivo y solo recuerda la última edición; W lo endurece.
 
 **US-10** 🟡 Como supervisor, quiero asignar tareas a mi cuadrilla dentro de un proyecto, para organizar el trabajo del día.
 - Criterios: lista de tareas por proyecto, asignable a persona o cuadrilla completa. *(RF-19)*
@@ -47,20 +50,33 @@ Prioridad: 🔴 MVP · 🟡 Fase 2 · ⚪ No prioritario por ahora (según decis
 ## Admin (dueño / encargado de nómina)
 
 **US-11** 🔴 Como admin, quiero crear un proyecto definiendo su ubicación y radio de geofence, para que el sistema empiece a rastrear horas ahí.
-- Criterios: ubicación con el GPS del teléfono, escribiendo coordenadas o pegando el par «latitud, longitud» que copia Google Maps (selección en mapa: pendiente, sin proveedor de mapas definido); radio ajustable en metros, de 100 a 1000 (por defecto 150); editar y archivar. *(RF-01, RF-02, RF-17)*
+- Criterios: ubicación con el GPS del teléfono, buscando la dirección, tocando o moviendo el pin en un mapa que muestra el círculo del radio, escribiendo coordenadas o pegando el par «latitud, longitud» que copia Google Maps (sin enlaces ni grados y minutos); radio ajustable en metros, de 100 a 1000 (por defecto 150); editar y archivar. *(RF-01, RF-02, RF-17)*
 - Decisión de la rebanada 1: el mínimo de 100 m sale del spike de geofencing (docs/spike-resultado.md).
+- Decisión (2026-10-08): el alta se hace sobre todo desde el teléfono (desde la computadora sería un extra). Mapa con react-native-maps; búsqueda por dirección con el geocodificador del teléfono y, si con direcciones reales de EE. UU. da malos resultados, con Google desde el backend. La cuenta y la clave de Google para producción las crea la agencia que publica la app cuando haga falta; en Expo Go funciona sin clave.
 
 **US-12** 🔴 Como admin, quiero invitar empleados a mi organización mediante un link o código, para que se unan sin fricción.
 - Criterios: link/código con expiración configurable; el empleado se auto-asigna rol "employee" al aceptar. *(RF-31, RF-32)*
 
 **US-13** 🔴 Como admin, quiero ver el total de horas por empleado, cuadrilla y proyecto en un rango de fechas, para preparar la nómina.
-- Criterios: filtros por empleado/cuadrilla/proyecto/fecha; totales con y sin horas extra. *(RF-11, RF-13)*
+- Criterios: se hace en el panel web (rebanada W); filtros por empleado/cuadrilla/proyecto/fecha; totales con y sin horas extra, calculados con las reglas de nómina de la organización (US-14), y el traslado (US-24) aparte. *(RF-11, RF-13)*
+- Nota: «cuadrilla» depende de US-17 (🟡); pendiente de decidir si el MVP reporta solo por empleado y proyecto (docs/plan-de-rebanadas.md).
 
-**US-14** 🔴 Como admin, quiero configurar el ciclo de pago de mi empresa, para que los reportes se agrupen correctamente.
-- Criterios: semanal / quincenal / mensual, con día de inicio configurable. *(RF-23)*
+**US-14** 🔴 Como admin, quiero configurar el ciclo de pago y las reglas de nómina de mi empresa, para que los reportes se agrupen y se calculen como la empresa paga.
+- Criterios: se hace en el panel web (rebanada W); ciclo semanal / quincenal / mensual, con día de inicio configurable. *(RF-23)*
+- Reglas de nómina, configurables por cada organización y sin reglas legales fijas en el código *(RF-13, RF-27)*, con estos valores por defecto:
+  - Inicio de la semana laboral: domingo.
+  - Horas extra: umbral semanal de 40 h; umbral diario opcional, desactivado por defecto.
+  - Comida: no descontar, descuento automático (por defecto 30 min en turnos de 6 h o más) o registro manual con botón de inicio y fin (requiere US-05).
+- Los cálculos con estas reglas se hacen al generar los reportes (US-13, US-15), no al fichar.
 
 **US-15** 🔴 Como admin, quiero exportar el reporte de horas en XLSX o PDF, para pasarlo a mi sistema de nómina actual.
-- Criterios: exportación respeta filtros aplicados; incluye desglose por empleado y totales. *(RF-24)*
+- Criterios: se hace en el panel web (rebanada W); exportación respeta filtros aplicados; incluye desglose por empleado y totales (regulares, extra, comida y traslado, como en US-13). *(RF-24)*
+
+**US-24** 🔴 Como admin, quiero ver el tiempo de traslado entre obras de cada empleado, para incluirlo en la nómina sin mezclarlo con las horas trabajadas en sitio.
+- Criterios: se calcula a partir de la salida de una obra y la entrada a la siguiente del mismo empleado (no hay seguimiento de la ruta: RF-15); solo cuenta entre dos obras, no el trayecto de la casa a la primera ni de la última a la casa; aparece en el reporte (US-13) en una columna aparte de las horas en sitio. *(RF-07)*
+- Pendiente de confirmar (docs/plan-de-rebanadas.md): máximo entre la salida y la entrada para contarlo como traslado (propuesto: 2 h, configurable), a qué proyecto se asigna (propuesto: al de destino) y qué pasa si se vuelve al mismo proyecto.
+- La rebanada 2 debe guardar horas exactas de entrada y salida, el origen de cada extremo y la precisión de la ubicación, para poder juzgar la fiabilidad de cada traslado. Se calcula en W.
+- Historia añadida el 2026-10-08, después de la numeración original.
 
 **US-16** 🟡 Como admin, quiero definir un presupuesto de horas por proyecto y ver el avance real, para controlar el costo de mano de obra.
 - Criterios: barra de progreso horas usadas / presupuestadas, con alerta visual si se excede. *(RF-20)*
@@ -96,6 +112,8 @@ Prioridad: 🔴 MVP · 🟡 Fase 2 · ⚪ No prioritario por ahora (según decis
 
 ## Resumen de priorización para el MVP (🔴)
 
-El MVP cubre: creación de proyectos con geofence (US-11), clock-in/out automático y manual (US-01 a US-03), delegación por supervisor (US-07), mapa en vivo (US-08), horas por empleado/proyecto (US-04, US-13), ciclo de pago y exportación (US-14, US-15), invitaciones (US-12), modo offline y batería (US-21, US-22).
+El MVP cubre: creación de proyectos con geofence, mapa y búsqueda por dirección (US-11), clock-in/out automático y manual (US-01 a US-03), delegación por supervisor (US-07), quién está activo según los fichajes (US-08), horas por empleado/proyecto (US-04, US-13), ciclo de pago, reglas de nómina y exportación (US-14, US-15), corrección de horas con motivo (US-09), tiempo de traslado (US-24), invitaciones (US-12), modo offline y batería (US-21, US-22).
 
-Todo lo 🟡 (pausas con descuento, presupuesto de horas, cuadrillas, edición con auditoría, tareas, idiomas) queda para Fase 2. Lo ⚪ (QuickBooks/Xero, Payworks) sigue descartado según lo ya decidido.
+Los reportes, las reglas de nómina, la corrección de horas y la exportación (US-09, US-13, US-14, US-15, US-24) se hacen en un **panel web mínimo** (rebanada W). Orden de las rebanadas pendientes: 2 (fichaje) → W → 3 (offline y batería) → 5 (supervisor); ver [docs/plan-de-rebanadas.md](docs/plan-de-rebanadas.md).
+
+Todo lo 🟡 (pausas con descuento, presupuesto de horas, cuadrillas, tareas, idiomas) queda para Fase 2; la edición con auditoría (US-09) subió a MVP. Pendiente de decidir: si las pausas (US-05) suben a MVP por el modo de comida manual. Fuera del MVP por decisión: historial de rutas y ubicación en vivo continua (RF-15 se mantiene: la ubicación solo se toma al fichar). Lo ⚪ (QuickBooks/Xero, Payworks) sigue descartado según lo ya decidido.

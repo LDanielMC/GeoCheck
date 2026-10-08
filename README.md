@@ -68,8 +68,9 @@ npm start                   # abre Metro para Expo Go; escanea el QR con la app 
 El teléfono y la PC deben estar en la misma red. La app deduce la IP del backend de la dirección de Metro
 (puerto 3000). Si no conecta, permite Node.js en el firewall de Windows para redes privadas.
 
-Desde Expo Go funcionan registro, login, unirse con código e invitaciones. **El geofencing en segundo plano
-no funciona en Expo Go**: necesita un development build (siguiente sección).
+Desde Expo Go funcionan registro, login, unirse con código, invitaciones y proyectos (con el mapa y la búsqueda
+por dirección). **El geofencing en segundo plano no funciona en Expo Go**: necesita un development build
+(siguiente sección).
 
 ## Spike de geofencing
 
@@ -119,6 +120,28 @@ del laboratorio del spike) está restringido por Google Play: o se justifica en 
 `mobile/app.json` y se guía al usuario a los ajustes de batería sin él. De paso, revisar el resto de permisos del
 manifiesto generado.
 
+## Mapa y búsqueda de direcciones
+
+El formulario de proyecto fija la ubicación con un mapa (`react-native-maps`: Google Maps en Android, Apple Maps en iOS)
+y busca direcciones con el geocodificador del propio teléfono (`expo-location`), sin cuenta, clave ni costo. En
+**Expo Go funciona tal cual**. La búsqueda solo se lanza al pulsar «Buscar» y no autocompleta; si con direcciones reales
+de EE. UU. no da buenos resultados, se cambia solo `searchAddress` (`mobile/src/services/addressSearch.ts`) por una
+llamada al backend que use Google.
+
+**Pendiente antes de publicar:** en un APK propio (development build, preview o production) el mapa de **Android** se ve en
+blanco mientras no tenga una clave de Google Maps; el resto de la pantalla (búsqueda, coordenadas, GPS y «Abrir el punto
+en la app de mapas») sigue funcionando. En iOS no hace falta clave. Cuando haga falta, la cuenta de Google la crea la
+agencia que publica la app:
+
+1. Proyecto en Google Cloud con facturación activada y la API **Maps SDK for Android** habilitada.
+2. Clave de API restringida a apps de Android: paquete `com.cliche.geocheck` y la huella SHA-1 del certificado con el que se
+   firma la app (con Play App Signing, la que muestra la Play Console).
+3. Añadir a `plugins` en `mobile/app.json`: `["react-native-maps", { "androidGoogleMapsApiKey": "<clave>" }]` y recompilar.
+
+Costos verificados en la documentación oficial el 2026-10-08 (pueden cambiar): el SDK de mapas para móvil no tiene costo
+por uso; la geocodificación de Google (solo si hay que cambiar de proveedor) incluye 10 000 solicitudes gratis al mes y
+después cuesta 5 USD por cada 1000.
+
 ## Tests
 
 ```bash
@@ -164,17 +187,28 @@ Autenticación: `Authorization: Bearer <token>`. Quién actúa y a qué organiza
 
 **Hecho:** rebanada 0 (base multi-tenant, auth con roles, invitaciones, tests, entorno Docker, app lista para
 development build) y rebanada 1 (proyectos: crear, ver, editar y archivar, con radio mínimo de 100 m; la ubicación se
-fija con el GPS del teléfono o con coordenadas, sin mapa todavía).
+fija con el GPS del teléfono, coordenadas, buscando la dirección o tocando el mapa). Falta probar la rebanada 1 completa
+en Expo Go, sobre todo la búsqueda con direcciones reales de EE. UU.
 
 **Spike de geofencing:** resultado provisional en **[docs/spike-resultado.md](docs/spike-resultado.md)** (viable con
 condiciones; falta medir el escenario 3, app deslizada de Recientes).
 
+**Plan y orden:** **[docs/plan-de-rebanadas.md](docs/plan-de-rebanadas.md)** fija el orden **2 → W → 3 → 5**, dónde
+entran las reglas de nómina (horas extra y comida configurables), el tiempo de traslado (US-24) y la corrección de horas
+con motivo (US-09), y las preguntas que siguen abiertas.
+
 **Siguiente:**
-1. **Spike de geofencing (corridas cortas pendientes):** escenarios 3 y 10 caminando, para cerrar lo que falta medir.
-2. Rebanada 2 (fichaje con ubicación), con los requisitos de [docs/spike-resultado.md](docs/spike-resultado.md):
-   filtro contra rebotes, ignorar los eventos de re-registro, vibración de las notificaciones en MIUI.
-3. Rebanada 3 (offline y batería), 4 (reportes y exportación), 5 (supervisor y mapa en vivo). Selector de ubicación en
-   mapa para los proyectos (pendiente decidir el proveedor de mapas sin costo).
+1. **Probar la rebanada 1 en Expo Go** y **escenario 3 del spike** (app deslizada de Recientes) con el APK actual.
+2. Rebanada 2 (fichaje automático y manual), con los requisitos de [docs/spike-resultado.md](docs/spike-resultado.md):
+   filtro contra rebotes, ignorar los eventos de re-registro, datos exactos de entrada y salida para el traslado.
+3. **W: panel web mínimo** (reportes, reglas de nómina, corrección de horas, traslado y exportación). Su alcance exacto
+   se aprueba antes de empezar.
+4. Rebanada 3 (offline y batería) y 5 (supervisor: quién está activo, según los fichajes).
+
+**Al recompilar el APK** (no antes): aplicar `shouldPlaySound: true` en `mobile/src/spike/labNotifications.ts`, actualizar
+`expo` (57.0.27), `expo-constants` (57.0.21) y `expo-notifications` (57.0.22), y revisar en el teléfono el canal de
+notificaciones (vibración, no molestar). Antes de publicar: la clave de Google Maps (sección anterior) y el permiso de
+exclusión de batería.
 
 Pendiente conocido: `mobile/src/services/geofenceService.ts` llama a endpoints que aún no existen
 (`/time-entries/exit/:id`); el spike y la rebanada 2 definen el contrato real. `ClockScreen` es una maqueta

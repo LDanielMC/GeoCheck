@@ -80,7 +80,8 @@ tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema y
    como «estimada».
 4. **Hora del evento**: la tarea escribe cuando corre, no cuando se cruzó el borde; guardar siempre el fix (precisión y
    antigüedad) junto con cada evento. Se observaron antigüedades de hasta 89 s.
-5. **Latencias de hasta ~3 min**: la interfaz distingue «detectado» de «confirmado» y permite ajustar horas (RF-08).
+5. **Latencias de hasta ~3 min**: la interfaz distingue «detectado» de «confirmado». Las correcciones de horas (RF-08)
+   no se hacen en el móvil: van en el panel web, con motivo (US-09, rebanada W; ver [plan-de-rebanadas.md](plan-de-rebanadas.md)).
 6. **Sin conexión**: la tarea headless no puede depender de la red; la cola local con sincronización posterior es parte
    de la rebanada 3.
 7. **No depender de notificaciones fijas ni de botones** para el fichaje; el fichaje manual es el respaldo.

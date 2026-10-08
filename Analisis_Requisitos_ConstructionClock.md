@@ -1,6 +1,8 @@
 # Análisis de Requisitos — App de Control de Horas para Construcción
 ### Basado en información pública de "ConstructionClock Time Tracker"
 
+> **Decisiones posteriores al análisis (2026-10-08).** El orden y el alcance vigentes están en [docs/plan-de-rebanadas.md](docs/plan-de-rebanadas.md). Cambian respecto a este documento: **RF-14** (mapa en vivo con la ubicación de cada miembro) queda fuera del MVP y **RF-15** se mantiene (la ubicación solo se toma al fichar); **RF-35** (aplicación web completa) se cubre de forma mínima con un panel web (rebanada W); **RF-07** (tiempo de viaje) pasa a MVP, calculado entre la salida de una obra y la entrada a la siguiente (US-24); **RF-08** (editar horas) pasa a MVP con motivo obligatorio (US-09); **RF-13** y **RF-27** (horas extra y descuento de comida) son ajustes configurables por organización, sin reglas legales fijas en el código.
+
 ---
 
 ## 0. Nota metodológica y de alcance
