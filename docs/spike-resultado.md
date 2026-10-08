@@ -108,10 +108,10 @@ tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema y
 
 - **Con la app abierta es un defecto del laboratorio:** el manejador de primer plano devuelve `shouldPlaySound: false` y
   `expo-notifications` en Android ata la vibración a ese flag (marca la notificación como silenciosa «sin importar el
-  canal»). Arreglo: `shouldPlaySound: true` en el manejador (los canales no tienen sonido, solo vibración). Está sin
-  aplicar a propósito. **Decidido (2026-10-08): se aplica en la próxima recompilación del APK, junto con la actualización
-  de los parches de `expo`, `expo-constants` y `expo-notifications`, y no antes**, para no cambiar el APK en mitad de las
-  pruebas.
+  canal»). Arreglo: `shouldPlaySound: true` en el manejador (los canales no tienen sonido, solo vibración). Se dejó sin
+  aplicar a propósito para no cambiar el APK en mitad de las pruebas. **Aplicado en el código el 2026-10-08**, junto con los
+  parches de `expo` (57.0.27), `expo-constants` (57.0.21) y `expo-notifications` (57.0.22); falta compilar el APK `spike`
+  nuevo (verificado en el código nativo de `expo-notifications` 57.0.22: la vibración sigue atada a ese flag).
 - **Con la app cerrada** no interviene ningún manejador y el canal sí pide vibración (`setVibrationPattern` +
   `enableVibration`), así que el bloqueo está en el teléfono: revisar en MIUI Ajustes › Notificaciones › GeoCheck › canal
   «Detección de cruces (vibra)» (vibración activada), «Vibrar en modo silencioso» y No molestar. Pendiente de confirmar.

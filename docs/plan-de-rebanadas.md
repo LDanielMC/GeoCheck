@@ -12,7 +12,7 @@ propongo y falta confirmar va marcado como *propuesto* o en «Por confirmar». C
 |---|---|---|---|
 | 0 | Base multi-tenant, autenticación con roles, invitaciones | Hecha | US-12 |
 | — | Spike de geofencing | Veredicto: viable con condiciones ([resultado](spike-resultado.md)); falta el escenario 3 | RNF-01, RNF-03 |
-| 1 | Proyectos: crear, ver, editar y archivar; ubicación con GPS, coordenadas, mapa o dirección | Implementada; falta probarla en Expo Go | US-11 |
+| 1 | Proyectos: crear, ver, editar y archivar; ubicación con GPS, coordenadas, mapa o dirección | Implementada; falta probar la búsqueda con direcciones reales y el mapa (development build con la clave de Google) | US-11 |
 | 2 | Fichaje automático y manual | Siguiente | US-01, US-02, US-03; US-04 (*propuesto*: totales simples) |
 | W | **Panel web mínimo** | Alcance por aprobar antes de empezar | US-09, US-13, US-14, US-15, US-24 |
 | 3 | Sin conexión y batería | | US-21, US-22 |
@@ -28,7 +28,9 @@ Orden decidido: **2 → W → 3 → 5**. La antigua rebanada 4 (reportes y expor
   Las obras se dan de alta sobre todo desde el teléfono; hacerlo desde la computadora sería un extra.
 - **Búsqueda por dirección:** el geocodificador del teléfono (`expo-location`). Si con direcciones reales de EE. UU. no da
   buenos resultados, se pasa a Google desde el backend (solo cambia `searchAddress`). La cuenta de Google la crea el usuario a
-  nombre de su agencia cuando haga falta la clave de producción; mientras tanto todo funciona en Expo Go.
+  nombre de su agencia. El mapa de Android necesita su clave también para probar: en el Expo Go del teléfono de pruebas salió
+  en blanco, así que se prueba con un development build que la lleve (pasos en el README). La clave llega por la variable
+  `GOOGLE_MAPS_ANDROID_API_KEY` de EAS, nunca en el repositorio.
 - **Panel web mínimo (W)** con el orden 2 → W → 3 → 5. Los reportes y la exportación (US-13, US-14, US-15) van en la web.
 - **Tiempo de traslado (US-24), MVP:** se calcula a partir de la salida de una obra y la entrada a la siguiente.
 - **Editar horas con motivo (US-09), MVP:** va en el panel web.
@@ -36,8 +38,9 @@ Orden decidido: **2 → W → 3 → 5**. La antigua rebanada 4 (reportes y expor
   regla legal va fija en el código (el primer cliente está en Oregon).
 - **Pegar coordenadas:** queda como está; no se aceptan enlaces ni grados y minutos.
 - **Batería:** se queda como «probable»; no se mide más.
-- **Próxima recompilación del APK** (no antes): aplicar `shouldPlaySound: true` en `labNotifications.ts` y actualizar los
-  parches de `expo` (57.0.27), `expo-constants` (57.0.21) y `expo-notifications` (57.0.22); ese día el usuario revisa en el
+- **Recompilación del APK:** `shouldPlaySound: true` en `labNotifications.ts` y los parches de `expo` (57.0.27),
+  `expo-constants` (57.0.21) y `expo-notifications` (57.0.22) quedaron aplicados en el código el 2026-10-08, al preparar el
+  build con la clave de Google Maps. La vibración solo se nota en el APK `spike`; al instalarlo, el usuario revisa en el
   teléfono el canal de notificaciones (vibración, no molestar).
 
 ## Estado actual de los datos (verificado en el backend)

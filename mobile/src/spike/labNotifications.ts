@@ -198,9 +198,10 @@ async function handleMarkerResponse(response: Notifications.NotificationResponse
 }
 
 if (SPIKE_MODE) {
-  // En primer plano también se muestran (por defecto Android las oculta si la app está abierta).
+  // En primer plano también se muestran (por defecto Android las oculta si la app está abierta). shouldPlaySound debe
+  // ser true: Expo ata la vibración de la notificación a ese flag y con false no vibra con la app abierta (spike-resultado.md).
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
+    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
   });
 
   // La tarea debe definirse en el alcance global del módulo: el sistema carga el bundle sin montar la UI.
