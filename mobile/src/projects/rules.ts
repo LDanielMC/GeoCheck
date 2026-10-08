@@ -42,6 +42,21 @@ export const draftFromProject = (project: Project): ProjectDraft => ({
   radius: String(project.geofenceRadius),
 });
 
+// Centro del borrador para abrir el mapa: solo si latitud y longitud son válidas.
+export function centerFromDraft(draft: ProjectDraft): { latitude: number; longitude: number } | null {
+  const latitude = parseNumber(draft.latitude);
+  const longitude = parseNumber(draft.longitude);
+  if (latitude === null || longitude === null) return null;
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { latitude, longitude };
+}
+
+// Radio del borrador para abrir el mapa: el escrito si es válido; si no, el de por defecto.
+export function radiusFromDraft(draft: ProjectDraft): number {
+  const radius = parseNumber(draft.radius);
+  return radius !== null && Number.isInteger(radius) && radius >= MIN_GEOFENCE_RADIUS_M && radius <= MAX_GEOFENCE_RADIUS_M ? radius : DEFAULT_GEOFENCE_RADIUS_M;
+}
+
 // "19,4284" (teclado en español) y "19.4284" valen igual. Texto vacío o con letras → null.
 export function parseNumber(text: string): number | null {
   const normalized = text.trim().replace(",", ".");

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Project } from "../types";
 import {
+  centerFromDraft,
   changedFields,
   draftFromProject,
   emptyDraft,
@@ -12,6 +13,7 @@ import {
   parseCoordinatePair,
   parseDraft,
   parseNumber,
+  radiusFromDraft,
   RADIUS_PRESETS,
   type ProjectDraft,
 } from "./rules";
@@ -178,5 +180,21 @@ describe("utilidades de ubicación", () => {
     expect(isPoorAccuracy(50)).toBe(false);
     expect(isPoorAccuracy(50.1)).toBe(true);
     expect(isPoorAccuracy(null)).toBe(false);
+  });
+});
+
+describe("datos del borrador para abrir el mapa", () => {
+  it("el centro solo existe si latitud y longitud son válidas", () => {
+    expect(centerFromDraft(valid)).toEqual({ latitude: 19.4284, longitude: -99.1677 });
+    expect(centerFromDraft({ ...valid, latitude: "19,4284" })).toEqual({ latitude: 19.4284, longitude: -99.1677 });
+    expect(centerFromDraft({ ...valid, latitude: "" })).toBeNull();
+    expect(centerFromDraft({ ...valid, longitude: "abc" })).toBeNull();
+    expect(centerFromDraft({ ...valid, latitude: "91" })).toBeNull();
+    expect(centerFromDraft({ ...valid, longitude: "-181" })).toBeNull();
+  });
+
+  it("el radio es el escrito si es válido; si no, el de por defecto de 150 m", () => {
+    expect(radiusFromDraft({ ...valid, radius: "250" })).toBe(250);
+    for (const radius of ["", "abc", "99", "1001", "120.5", "-150"]) expect(radiusFromDraft({ ...valid, radius }), radius).toBe(150);
   });
 });

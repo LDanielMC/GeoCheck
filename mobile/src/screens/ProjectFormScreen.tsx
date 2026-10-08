@@ -1,7 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Linking, StyleSheet, Text, View } from "react-native";
+import ProjectMapPicker, { type PickedLocation } from "../components/ProjectMapPicker";
 import { useBackHandler } from "../hooks/useBackHandler";
 import {
+  centerFromDraft,
   changedFields,
   draftFromProject,
   emptyDraft,
@@ -12,6 +14,7 @@ import {
   parseCoordinatePair,
   parseDraft,
   parseNumber,
+  radiusFromDraft,
   RADIUS_PRESETS,
   type DraftErrors,
   type ProjectDraft,
@@ -34,6 +37,7 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
   const [error, setError] = useState<string | null>(null);
   const [pasted, setPasted] = useState("");
   const pastedPair = useMemo(() => parseCoordinatePair(pasted), [pasted]);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useBackHandler(useCallback(() => onBack(), [onBack]));
 
@@ -65,6 +69,15 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
     setAccuracy(null); // ya no viene del GPS
     setPasted("");
     setError(null);
+  };
+
+  // Resultado del selector en mapa: ubicación y radio a la vez.
+  const applyPicked = (picked: PickedLocation) => {
+    setDraft((current) => ({ ...current, latitude: String(picked.latitude), longitude: String(picked.longitude), radius: String(picked.radius) }));
+    setErrors((current) => ({ ...current, latitude: undefined, longitude: undefined, radius: undefined }));
+    setAccuracy(null); // ya no viene del GPS
+    setError(null);
+    setPickerOpen(false);
   };
 
   const openInMaps = () => {
@@ -127,7 +140,7 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
   };
 
   const title = isNew ? "Nuevo proyecto" : canEdit ? "Editar proyecto" : "Proyecto";
-  const subtitle = isNew ? "Párate en la obra y usa tu ubicación, o escribe las coordenadas." : undefined;
+  const subtitle = isNew ? "Busca la dirección en el mapa, o párate en la obra y usa tu ubicación." : undefined;
 
   return (
     <FormScreen title={title} subtitle={subtitle}>
@@ -154,6 +167,7 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
       ) : null}
 
       <Text style={styles.label}>Ubicación</Text>
+      <Button title={canEdit ? "Buscar dirección o elegir en el mapa" : "Ver en el mapa"} onPress={() => setPickerOpen(true)} />
       {canEdit ? <Button title="Usar mi ubicación actual" tone="secondary" onPress={useMyLocation} loading={locating} /> : null}
       {accuracy != null ? (
         <Text style={[styles.hint, isPoorAccuracy(accuracy) && styles.warning]}>
@@ -181,12 +195,21 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
       <FieldError message={errors.latitude} />
       <Field label="Longitud" value={draft.longitude} onChangeText={setField("longitude")} editable={canEdit} keyboardType="numbers-and-punctuation" autoCapitalize="none" />
       <FieldError message={errors.longitude} />
-      <LinkButton title="Ver el punto en el mapa" onPress={openInMaps} />
+      <LinkButton title="Abrir el punto en la app de mapas" onPress={openInMaps} />
 
       <ErrorText message={error} />
       {canEdit ? <Button title={isNew ? "Crear proyecto" : "Guardar cambios"} onPress={save} loading={saving} /> : null}
       {canEdit && project !== null ? (
         <Button title={project.archived ? "Restaurar proyecto" : "Archivar proyecto"} tone={project.archived ? "secondary" : "danger"} onPress={confirmArchive} />
+      ) : null}
+
+      {pickerOpen ? (
+        <ProjectMapPicker
+          initial={{ center: centerFromDraft(draft), radius: radiusFromDraft(draft) }}
+          readOnly={!canEdit}
+          onConfirm={applyPicked}
+          onClose={() => setPickerOpen(false)}
+        />
       ) : null}
     </FormScreen>
   );

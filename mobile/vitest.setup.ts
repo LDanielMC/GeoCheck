@@ -50,6 +50,8 @@ vi.mock("expo-location", () => ({
   getLastKnownPositionAsync: vi.fn(async () => ({ coords: { accuracy: 12 }, timestamp: Date.now() - 2000 })),
   getCurrentPositionAsync: vi.fn(async () => ({ coords: { latitude: 19.4284, longitude: -99.1677, accuracy: 8 }, timestamp: Date.now() })),
   watchPositionAsync: vi.fn(async () => ({ remove: () => undefined })),
+  geocodeAsync: vi.fn(async () => []),
+  reverseGeocodeAsync: vi.fn(async () => []),
 }));
 
 vi.mock("expo-task-manager", () => ({ defineTask: vi.fn(), isTaskDefined: vi.fn(() => true) }));
