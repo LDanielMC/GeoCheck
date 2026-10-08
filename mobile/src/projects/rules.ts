@@ -50,6 +50,22 @@ export function parseNumber(text: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+// El par que copia Google Maps ("18.9254, -99.2217", "latitud, longitud") en un solo texto. Admite paréntesis, coma
+// decimal, separador con coma, punto y coma o espacio, y el signo menos tipográfico. Devuelve null si no es un par
+// o si cae fuera de rango (lo habitual cuando vienen invertidos: longitud, latitud).
+const COORD = String.raw`[-+]?\d+(?:[.,]\d+)?`;
+const COORDINATE_PAIR = new RegExp(String.raw`^\s*\(?\s*(${COORD})\s*(?:[,;]\s*|\s+)(${COORD})\s*\)?\s*$`);
+
+export function parseCoordinatePair(text: string): { latitude: number; longitude: number } | null {
+  const match = COORDINATE_PAIR.exec(text.replace(/\u2212/g, "-").replace(/°/g, ""));
+  if (!match) return null;
+  const latitude = parseNumber(match[1]);
+  const longitude = parseNumber(match[2]);
+  if (latitude === null || longitude === null) return null;
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { latitude, longitude };
+}
+
 export function parseDraft(draft: ProjectDraft): ParseResult {
   const errors: DraftErrors = {};
 

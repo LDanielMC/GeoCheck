@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Linking, StyleSheet, Text, View } from "react-native";
 import { useBackHandler } from "../hooks/useBackHandler";
 import {
@@ -9,6 +9,7 @@ import {
   mapsUrl,
   MAX_GEOFENCE_RADIUS_M,
   MIN_GEOFENCE_RADIUS_M,
+  parseCoordinatePair,
   parseDraft,
   parseNumber,
   RADIUS_PRESETS,
@@ -31,6 +32,8 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
   const [locating, setLocating] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pasted, setPasted] = useState("");
+  const pastedPair = useMemo(() => parseCoordinatePair(pasted), [pasted]);
 
   useBackHandler(useCallback(() => onBack(), [onBack]));
 
@@ -52,6 +55,16 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
     } finally {
       setLocating(false);
     }
+  };
+
+  // Respaldo cuando la dirección se busca en Google Maps: se copia el par de coordenadas y se pega aquí.
+  const applyPasted = () => {
+    if (!pastedPair) return;
+    setDraft((current) => ({ ...current, latitude: String(pastedPair.latitude), longitude: String(pastedPair.longitude) }));
+    setErrors((current) => ({ ...current, latitude: undefined, longitude: undefined }));
+    setAccuracy(null); // ya no viene del GPS
+    setPasted("");
+    setError(null);
   };
 
   const openInMaps = () => {
@@ -146,6 +159,23 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
         <Text style={[styles.hint, isPoorAccuracy(accuracy) && styles.warning]}>
           Precisión del GPS: ±{Math.round(accuracy)} m.{isPoorAccuracy(accuracy) ? " Es baja: espera unos segundos a cielo abierto y vuelve a intentarlo." : ""}
         </Text>
+      ) : null}
+      {canEdit ? (
+        <>
+          <Field
+            label="Pegar coordenadas (de Google Maps, «latitud, longitud»)"
+            placeholder="18.9254, -99.2217"
+            value={pasted}
+            onChangeText={setPasted}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {pastedPair ? (
+            <Button title={`Aplicar ${pastedPair.latitude}, ${pastedPair.longitude}`} tone="secondary" onPress={applyPasted} />
+          ) : pasted.trim() ? (
+            <Text style={styles.fieldError}>No se reconoció. Usa el formato «latitud, longitud», por ejemplo 18.9254, -99.2217.</Text>
+          ) : null}
+        </>
       ) : null}
       <Field label="Latitud" value={draft.latitude} onChangeText={setField("latitude")} editable={canEdit} keyboardType="numbers-and-punctuation" autoCapitalize="none" />
       <FieldError message={errors.latitude} />

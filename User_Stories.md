@@ -47,7 +47,7 @@ Prioridad: 🔴 MVP · 🟡 Fase 2 · ⚪ No prioritario por ahora (según decis
 ## Admin (dueño / encargado de nómina)
 
 **US-11** 🔴 Como admin, quiero crear un proyecto definiendo su ubicación y radio de geofence, para que el sistema empiece a rastrear horas ahí.
-- Criterios: ubicación con el GPS del teléfono o escribiendo coordenadas (selección en mapa: pendiente, sin proveedor de mapas definido); radio ajustable en metros, de 100 a 1000 (por defecto 150); editar y archivar. *(RF-01, RF-02, RF-17)*
+- Criterios: ubicación con el GPS del teléfono, escribiendo coordenadas o pegando el par «latitud, longitud» que copia Google Maps (selección en mapa: pendiente, sin proveedor de mapas definido); radio ajustable en metros, de 100 a 1000 (por defecto 150); editar y archivar. *(RF-01, RF-02, RF-17)*
 - Decisión de la rebanada 1: el mínimo de 100 m sale del spike de geofencing (docs/spike-resultado.md).
 
 **US-12** 🔴 Como admin, quiero invitar empleados a mi organización mediante un link o código, para que se unan sin fricción.

@@ -9,6 +9,7 @@ import {
   mapsUrl,
   MAX_GEOFENCE_RADIUS_M,
   MIN_GEOFENCE_RADIUS_M,
+  parseCoordinatePair,
   parseDraft,
   parseNumber,
   RADIUS_PRESETS,
@@ -42,6 +43,54 @@ describe("números escritos a mano", () => {
     for (const bad of ["", "   ", "abc", "12abc", "1.2.3", "1,2,3", "--1", "1e5", "Infinity", "NaN", "0x10", "19.4284°"]) {
       expect(parseNumber(bad), bad).toBeNull();
     }
+  });
+});
+
+describe("pegar el par de coordenadas de Google Maps", () => {
+  const expected = { latitude: 18.9254, longitude: -99.2217 };
+
+  it("acepta el formato que copia Google Maps y sus variantes comunes", () => {
+    for (const text of [
+      "18.9254, -99.2217",
+      "18.9254,-99.2217",
+      "  18.9254, -99.2217  ",
+      "18.9254, -99.2217\n",
+      "(18.9254, -99.2217)",
+      "18.9254 -99.2217",
+      "18.9254; -99.2217",
+      "18.9254°, -99.2217°",
+      "18,9254, -99,2217", // coma decimal
+      "18,9254; -99,2217",
+      "18.9254, −99.2217", // signo menos tipográfico
+    ]) {
+      expect(parseCoordinatePair(text), JSON.stringify(text)).toEqual(expected);
+    }
+  });
+
+  it("conserva todos los decimales y admite enteros y signos explícitos", () => {
+    expect(parseCoordinatePair("19.428412345, -99.167712345")).toEqual({ latitude: 19.428412345, longitude: -99.167712345 });
+    expect(parseCoordinatePair("19, -99")).toEqual({ latitude: 19, longitude: -99 });
+    expect(parseCoordinatePair("+19.5, +99.5")).toEqual({ latitude: 19.5, longitude: 99.5 });
+  });
+
+  it("rechaza lo que no es un par: un solo número, tres números, texto, grados y minutos, enlaces", () => {
+    for (const bad of ["", "18.9254", "18.9254, -99.2217, 5", "abc, def", "18.9254, abc", "18°55'31.8\"N 99°13'18.2\"W", "https://maps.google.com/?q=18.9254,-99.2217"]) {
+      expect(parseCoordinatePair(bad), JSON.stringify(bad)).toBeNull();
+    }
+  });
+
+  it("rechaza lo que cae fuera de rango; el caso típico es el orden invertido (longitud, latitud)", () => {
+    expect(parseCoordinatePair("-99.2217, 18.9254")).toBeNull();
+    expect(parseCoordinatePair("91, 0")).toBeNull();
+    expect(parseCoordinatePair("0, 181")).toBeNull();
+    expect(parseCoordinatePair("90, 180")).toEqual({ latitude: 90, longitude: 180 });
+  });
+
+  it("el resultado pasa la validación del formulario", () => {
+    const pair = parseCoordinatePair("18.9254, -99.2217");
+    expect(pair).not.toBeNull();
+    const result = parseDraft({ name: "Obra", latitude: String(pair!.latitude), longitude: String(pair!.longitude), radius: "150" });
+    expect(result.ok).toBe(true);
   });
 });
 

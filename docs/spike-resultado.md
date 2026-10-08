@@ -23,7 +23,7 @@ requisitos de abajo y queda **condicionada al resultado del escenario 3**.
 | Latencia de entrada ≤ 3 min | **Sin dato** | No hay una entrada real medida (el ENTER de las 12:46 fue un re-registro) |
 | Latencia de salida ≤ 5 min | **Cumple de forma provisional (n=1)** | 0–3 min en segundo plano con el proceso muerto (salió entre 15:42 y 15:45; evento 15:45:02). 37,5 s con GPS en vivo (S4, medida válida) |
 | ≤ 1 transición falsa por día quieto | **En el límite (1 día)** | 1 pareja Exit/Enter falsa en ~20 h en casa (01:47, separadas 4,8 s; el Exit con fix de ±100 m y radio de 100 m) |
-| Batería ≤ 3 % por jornada | **Probable, sin confirmar** | GeoCheck = 3,35 % del *uso total* (cuota de consumo, no % de batería), CPU 4 min 10 s, GPS 15 min 46 s casi todo del panel en vivo. Falta el denominador (cuánto % total se consumió en ese periodo) |
+| Batería ≤ 3 % por jornada | **Probable (decisión del usuario: se deja así, no se medirá más)** | GeoCheck = 3,35 % del *uso total* (cuota de consumo, no % de batería), CPU 4 min 10 s, GPS 15 min 46 s casi todo del panel en vivo. Falta el denominador (cuánto % total se consumió en ese periodo) |
 | Funciona con la app cerrada | **Confirmado** | 4 eventos con el proceso muerto (JS recién cargado, ~0,98 s, app en segundo plano) y un cruce real (15:45) |
 | Tras reiniciar el teléfono | **Confirmado** | Apagado por batería, encendido sin abrir la app: Expo re-registró la geocerca (el ENTER de las 12:46) y 3 h después se detectó una salida real |
 | Con la app deslizada de Recientes | **Sin medir (riesgo principal)** | El usuario nunca la deslizó. «Proceso muerto» en los eventos es el estado normal tras una tarea headless, no equivale a haberla cerrado a la fuerza |
@@ -89,6 +89,19 @@ tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema y
    Recientes, inicio automático) y valorar un servicio en primer plano como respaldo. Si no falla, basta la guía.
 10. **Reconciliar al abrir la app** aunque todo funcione: es barato y cubre cualquier pérdida silenciosa de Google Play
     Services, que la app no puede ver (`hasStartedGeofencingAsync` solo consulta el registro de Expo).
+11. **Límite de 100 geocercas por app** (documentación oficial de Android): con muchas obras hay que registrar solo las
+    activas o cercanas y renovar el conjunto cuando el teléfono se mueva.
+
+### Hechos verificados en la documentación oficial de Android (developer.android.com, geofencing)
+
+- «For best results, the minimum radius of the geofence should be set between 100 - 150 meters.» (de ahí el mínimo de 100 m
+  y el valor por defecto de 150 m en los proyectos).
+- «On single-user devices, there is a limit of 100 geofences per app.»
+- Latencia: «Usually the latency is less than 2 minutes»; con límites de ubicación en segundo plano «about 2-3 minutes on
+  average»; con el dispositivo quieto mucho tiempo «up to 6 minutes». Es coherente con los datos (0–3 min) y significa que el
+  criterio de salida ≤ 5 min puede incumplirse de forma legítima con el teléfono quieto.
+- Las geocercas no sobreviven a un reinicio, a reinstalar la app ni a borrar sus datos: hay que volver a registrarlas (en
+  esta app lo hace Expo al arrancar; confirmado en las pruebas con el reinicio por batería).
 
 ### Notificaciones: vibración
 
