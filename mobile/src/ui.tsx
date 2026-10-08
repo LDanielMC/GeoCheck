@@ -94,6 +94,20 @@ export function LinkButton({ title, onPress }: { title: string; onPress: () => v
   );
 }
 
+// Opción seleccionable en fila (rol, vigencia, radio…).
+export function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={[styles.chip, selected && styles.chipSelected]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+    >
+      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export function ErrorText({ message }: { message: string | null }) {
   return message ? <Text style={styles.error}>{message}</Text> : null;
 }
@@ -127,4 +141,8 @@ const styles = StyleSheet.create({
   link: { minHeight: 44, alignItems: "center", justifyContent: "center" },
   linkText: { color: colors.primary, fontSize: 14, fontWeight: "500" },
   error: { color: colors.danger, fontSize: 13, textAlign: "center" },
+  chip: { minHeight: 40, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, justifyContent: "center" },
+  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { fontSize: 14, color: colors.text },
+  chipTextSelected: { color: "white", fontWeight: "600" },
 });

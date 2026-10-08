@@ -79,7 +79,7 @@ model Project {
   name           String
   latitude       Float
   longitude      Float
-  geofenceRadius Int          @default(120) // metros; la API limita a 20–1000
+  geofenceRadius Int          @default(150) // metros; la API limita a 100–1000 (ver docs/spike-resultado.md)
   archived       Boolean      @default(false)
   createdAt      DateTime     @default(now())
 

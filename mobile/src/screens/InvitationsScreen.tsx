@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, FlatList, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Share, StyleSheet, Text, View } from "react-native";
 import { useBackHandler } from "../hooks/useBackHandler";
 import { errorMessage } from "../services/errors";
 import { createInvitation, listInvitations, revokeInvitation } from "../services/invitationService";
 import { ROLE_LABELS, type InvitableRole, type Invitation, type InvitationStatus, type SessionUser } from "../types";
-import { Button, colors, ErrorText, LinkButton } from "../ui";
+import { Button, Chip, colors, ErrorText, LinkButton } from "../ui";
 
 const ROLE_OPTIONS: { value: InvitableRole; label: string }[] = [
   { value: "EMPLOYEE", label: ROLE_LABELS.EMPLOYEE },
@@ -143,28 +143,11 @@ export default function InvitationsScreen({ user, onBack }: { user: SessionUser;
   );
 }
 
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      style={[styles.chip, selected && styles.chipSelected]}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-    >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, gap: 8 },
   title: { fontSize: 22, fontWeight: "bold", color: colors.text, marginBottom: 4 },
   label: { fontSize: 12, color: colors.muted, marginTop: 4 },
   chips: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  chip: { minHeight: 40, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, justifyContent: "center" },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: 14, color: colors.text },
-  chipTextSelected: { color: "white", fontWeight: "600" },
   list: { paddingTop: 8, gap: 8 },
   item: { backgroundColor: colors.surface, borderRadius: 10, padding: 12, gap: 4 },
   itemHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

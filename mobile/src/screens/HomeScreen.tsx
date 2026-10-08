@@ -8,10 +8,12 @@ import { Button, colors } from "../ui";
 export default function HomeScreen({
   user,
   offline,
+  onOpenProjects,
   onOpenInvitations,
 }: {
   user: SessionUser;
   offline: boolean;
+  onOpenProjects: () => void;
   onOpenInvitations: () => void;
 }) {
   const { signOut, refresh } = useAuth();
@@ -32,8 +34,10 @@ export default function HomeScreen({
         <Text style={styles.email}>{user.email}</Text>
       </View>
 
+      <Button title="Proyectos" onPress={onOpenProjects} />
+
       {user.role === "ADMIN" ? (
-        <Button title="Invitar personas" onPress={onOpenInvitations} />
+        <Button title="Invitar personas" tone="secondary" onPress={onOpenInvitations} />
       ) : (
         <View style={styles.card}>
           <Text style={styles.info}>El fichaje automático por ubicación estará disponible pronto.</Text>

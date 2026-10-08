@@ -139,7 +139,7 @@ local (por ejemplo Supabase), define `TEST_DATABASE_URL` con una base de pruebas
 2. La base debe estar vacía o reseteada (`npx prisma migrate reset`): el schema cambió respecto al primer esqueleto.
 3. `npx prisma migrate deploy`.
 
-## API (rebanada 0)
+## API (rebanadas 0 y 1)
 
 | Método y ruta | Quién | Qué hace |
 |---|---|---|
@@ -150,7 +150,9 @@ local (por ejemplo Supabase), define `TEST_DATABASE_URL` con una base de pruebas
 | `POST /invitations` | ADMIN | Genera código (rol EMPLOYEE/SUPERVISOR/BOOKKEEPER, 1–30 días) |
 | `GET /invitations` | ADMIN | Lista con estado y cuántas personas se unieron |
 | `DELETE /invitations/:id` | ADMIN | Revoca el código |
-| `POST /projects`, `GET /projects` | ADMIN / todos | Proyectos con ubicación y radio (20–1000 m) |
+| `POST /projects` | ADMIN | Crea un proyecto: nombre, ubicación y radio de la geocerca (100–1000 m, por defecto 150) |
+| `GET /projects`, `GET /projects/:id` | todos | Proyectos de la organización, sin archivados (`?includeArchived=true` solo para ADMIN) |
+| `PATCH /projects/:id` | ADMIN | Edita nombre, ubicación (latitud y longitud juntas), radio y `archived` (archivar o restaurar) |
 | `POST /time-entries/clock-in`, `/:id/clock-out` | ADMIN, SUPERVISOR, EMPLOYEE | Fichaje propio |
 | `POST /time-entries/delegated-clock-in`, `PATCH /time-entries/:id` | ADMIN, SUPERVISOR | Fichar por otros y editar horas |
 
@@ -161,14 +163,18 @@ Autenticación: `Authorization: Bearer <token>`. Quién actúa y a qué organiza
 ## Estado
 
 **Hecho:** rebanada 0 (base multi-tenant, auth con roles, invitaciones, tests, entorno Docker, app lista para
-development build).
+development build) y rebanada 1 (proyectos: crear, ver, editar y archivar, con radio mínimo de 100 m; la ubicación se
+fija con el GPS del teléfono o con coordenadas, sin mapa todavía).
+
+**Spike de geofencing:** resultado provisional en **[docs/spike-resultado.md](docs/spike-resultado.md)** (viable con
+condiciones; falta medir el escenario 3, app deslizada de Recientes).
 
 **Siguiente:**
-1. **Spike de geofencing (en curso):** laboratorio con panel en vivo, sesiones, notificaciones de detección y
-   marcadores sin abrir la app; primera prueba de campo hecha (la guía y el análisis se corrigieron con sus datos).
-   Falta recompilar el APK `spike` y completar los escenarios en un Android real. iOS después.
-2. Rebanada 1: proyectos (crear con mapa, editar, archivar).
-3. Rebanada 2 (fichaje con ubicación), 3 (offline y batería), 4 (reportes y exportación), 5 (supervisor y mapa en vivo).
+1. **Spike de geofencing (corridas cortas pendientes):** escenarios 3 y 10 caminando, para cerrar lo que falta medir.
+2. Rebanada 2 (fichaje con ubicación), con los requisitos de [docs/spike-resultado.md](docs/spike-resultado.md):
+   filtro contra rebotes, ignorar los eventos de re-registro, vibración de las notificaciones en MIUI.
+3. Rebanada 3 (offline y batería), 4 (reportes y exportación), 5 (supervisor y mapa en vivo). Selector de ubicación en
+   mapa para los proyectos (pendiente decidir el proveedor de mapas sin costo).
 
 Pendiente conocido: `mobile/src/services/geofenceService.ts` llama a endpoints que aún no existen
 (`/time-entries/exit/:id`); el spike y la rebanada 2 definen el contrato real. `ClockScreen` es una maqueta

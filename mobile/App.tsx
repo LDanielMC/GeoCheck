@@ -5,10 +5,12 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import HomeScreen from "./src/screens/HomeScreen";
 import InvitationsScreen from "./src/screens/InvitationsScreen";
+import ProjectFormScreen from "./src/screens/ProjectFormScreen";
+import ProjectsScreen from "./src/screens/ProjectsScreen";
 import JoinScreen from "./src/screens/JoinScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterOrganizationScreen from "./src/screens/RegisterOrganizationScreen";
-import type { SessionUser } from "./src/types";
+import type { Project, SessionUser } from "./src/types";
 
 // Modo spike (perfil "spike" de eas.json, o desarrollo con EXPO_PUBLIC_SPIKE=1): solo el laboratorio de geofencing,
 // que no usa sesión ni servidor. Todo lo del spike se carga ÚNICAMENTE en este modo: el build normal no incluye el
@@ -25,7 +27,12 @@ const GeofenceLabScreen: React.ComponentType = SPIKE_MODE ? require("./src/scree
 // Navegación por estado: pocas pantallas y sin dependencias extra. Se cambiará por una
 // librería de navegación cuando haya más pantallas (proyectos, reportes, mapa).
 type SignedOutScreen = "login" | "register" | "join";
-type SignedInScreen = "home" | "invitations";
+type SignedInScreen =
+  | { name: "home" }
+  | { name: "invitations" }
+  | { name: "projects" }
+  // project = null: proyecto nuevo
+  | { name: "project"; project: Project | null };
 
 function SignedOutFlow() {
   const [screen, setScreen] = useState<SignedOutScreen>("login");
@@ -36,13 +43,28 @@ function SignedOutFlow() {
 }
 
 function SignedInFlow({ user, offline }: { user: SessionUser; offline: boolean }) {
-  const [screen, setScreen] = useState<SignedInScreen>("home");
+  const [screen, setScreen] = useState<SignedInScreen>({ name: "home" });
+  const goHome = () => setScreen({ name: "home" });
 
   // Solo el ADMIN llega a invitaciones; el servidor lo exige igualmente (403 para los demás roles).
-  if (screen === "invitations" && user.role === "ADMIN") {
-    return <InvitationsScreen user={user} onBack={() => setScreen("home")} />;
+  if (screen.name === "invitations" && user.role === "ADMIN") {
+    return <InvitationsScreen user={user} onBack={goHome} />;
   }
-  return <HomeScreen user={user} offline={offline} onOpenInvitations={() => setScreen("invitations")} />;
+  if (screen.name === "projects") {
+    return <ProjectsScreen user={user} onBack={goHome} onOpenProject={(project) => setScreen({ name: "project", project })} />;
+  }
+  // Los demás roles ven el proyecto en solo lectura; crear o editar lo exige también el servidor (403).
+  if (screen.name === "project") {
+    return <ProjectFormScreen user={user} project={screen.project} onBack={() => setScreen({ name: "projects" })} />;
+  }
+  return (
+    <HomeScreen
+      user={user}
+      offline={offline}
+      onOpenProjects={() => setScreen({ name: "projects" })}
+      onOpenInvitations={() => setScreen({ name: "invitations" })}
+    />
+  );
 }
 
 function Root() {

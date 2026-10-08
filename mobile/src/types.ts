@@ -36,3 +36,15 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   EMPLOYEE: "Empleado",
   BOOKKEEPER: "Contador",
 };
+
+// Proyecto (obra) con su geocerca. Los límites del radio están en src/projects/rules.ts.
+export interface Project {
+  id: string;
+  organizationId: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  geofenceRadius: number;
+  archived: boolean;
+  createdAt: string;
+}

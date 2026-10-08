@@ -28,18 +28,18 @@ describe("proyectos", () => {
     await request(app).get("/projects").expect(401);
   });
 
-  it("valida nombre, coordenadas y radio (20–1000 m)", async () => {
+  it("valida nombre, coordenadas y radio (100–1000 m; el detalle está en projects.test.ts)", async () => {
     const { admin } = await makeOrg();
     const post = (body: object) => request(app).post("/projects").set(bearer(admin.token)).send(body);
 
     await post({ name: "", ...SITE }).expect(400);
     await post({ name: "X", latitude: 91, longitude: 0 }).expect(400);
     await post({ name: "X", latitude: 0, longitude: -181 }).expect(400);
-    await post({ name: "X", ...SITE, geofenceRadius: 19 }).expect(400);
+    await post({ name: "X", ...SITE, geofenceRadius: 99 }).expect(400);
     await post({ name: "X", ...SITE, geofenceRadius: 1001 }).expect(400);
     await post({ name: "X", ...SITE, geofenceRadius: 100.5 }).expect(400);
     const ok = await post({ name: "X", ...SITE }).expect(201);
-    expect(ok.body.geofenceRadius).toBe(120); // valor por defecto
+    expect(ok.body.geofenceRadius).toBe(150); // valor por defecto
   });
 
   it("no lista los proyectos archivados", async () => {
