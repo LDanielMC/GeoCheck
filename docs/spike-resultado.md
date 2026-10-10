@@ -1,32 +1,34 @@
 # Resultado del spike de geofencing
 
-Fecha: 2026-10-07 · Dispositivo: Xiaomi Redmi Note 10 Pro (Android 13, MIUI 14), ajustes de batería por defecto
-(«Ahorro de batería (recomendado)», sin «Sin restricciones») · Datos: dos exportaciones del log del laboratorio,
-la verdad de campo que aportó el usuario y la lectura del código nativo de Expo.
+Fecha: 2026-10-07, actualizado el 2026-10-10 (escenario 3 y verdad de campo del 9 y 10 de octubre) · Dispositivo: Xiaomi
+Redmi Note 10 Pro (Android 13, MIUI 14), ajustes de batería por defecto («Ahorro de batería (recomendado)», sin «Sin
+restricciones») · Datos: exportaciones del log del laboratorio, las horas que el usuario tomó con reloj y la verdad de campo
+que aportó, y la lectura del código nativo de Expo.
 
 ## Veredicto
 
-**Viable, con condiciones.** Lo que podía hundir el enfoque, que el geofencing nativo funcione con la app cerrada en un
-Xiaomi, **salió bien**: despierta el proceso muerto, y sobrevive a un apagado y encendido del teléfono sin abrir la app.
-Lo que falta es **cuantificar** (cuántos cruces se pierden, cuánto tarda en segundo plano, cuántos falsos hay) y despejar
-**un riesgo grande sin medir**: qué pasa cuando el usuario **desliza la app de Recientes** (MIUI puede tratarlo como
-«forzar detención», que borra las geocercas hasta que la app vuelva a arrancar).
+**Viable.** El usuario **cerró el spike el 2026-10-10**. Lo que podía hundir el enfoque, que el geofencing nativo funcione
+con la app cerrada en un Xiaomi, **salió bien**: despierta el proceso muerto, sobrevive a un apagado y encendido del teléfono
+sin abrir la app y, el riesgo principal, **también funciona con la app deslizada de Recientes y la pantalla bloqueada**
+(escenario 3, 8 oct). La detección **no depende de los datos móviles**. Las condiciones son los requisitos de la rebanada 2
+(abajo) y las lecciones de «Escenario 3 y verdad de campo»: filtrar falsos positivos con mala precisión y no dejar el borde
+de la geocerca donde la gente pasa mucho tiempo.
 
-Recomendación: **empezar la rebanada 1** (no depende de lo que falta). La rebanada 2 (fichaje) se diseña con los
-requisitos de abajo y queda **condicionada al resultado del escenario 3**.
+Recomendación: la rebanada 2 (fichaje) se diseña con los requisitos de abajo.
 
 ## Criterios acordados
 
 | Criterio | Estado | Evidencia |
 |---|---|---|
-| ≥ 90 % de entradas y salidas detectadas | **Sin muestra suficiente; ningún fallo observado** | 1 de 1 salida real en segundo plano detectada (15:45). Con GPS en vivo se detectaron todas las salidas (S4, S6–S9), pero es el mejor caso. Ninguna pérdida confirmada |
-| Latencia de entrada ≤ 3 min | **Sin dato** | No hay una entrada real medida (el ENTER de las 12:46 fue un re-registro) |
-| Latencia de salida ≤ 5 min | **Cumple de forma provisional (n=1)** | 0–3 min en segundo plano con el proceso muerto (salió entre 15:42 y 15:45; evento 15:45:02). 37,5 s con GPS en vivo (S4, medida válida) |
-| ≤ 1 transición falsa por día quieto | **En el límite (1 día)** | 1 pareja Exit/Enter falsa en ~20 h en casa (01:47, separadas 4,8 s; el Exit con fix de ±100 m y radio de 100 m) |
+| ≥ 90 % de entradas y salidas detectadas | **Cumple; ninguna pérdida observada** | Escenario 3 (8 oct): 3 de 3 cruces con hora de reloj detectados. 9 y 10 oct: 5 parejas entrada → salida (10 eventos) que corresponden a cruces reales según la rutina del usuario (sin hora de reloj). Antes: 1 de 1 salida real en segundo plano (15:45 del 6 oct). Muestra pequeña |
+| Latencia de entrada ≤ 3 min | **Cumple (n=1)** | 42 s en frío: cruzó el borde a las 19:43:17 y la ENTRADA llegó a las 19:43:59 (escenario 3) |
+| Latencia de salida ≤ 5 min | **Cumple (n=2 en segundo plano)** | Escenario 3: 2 min 25 s (cruzó a las 19:28:36, SALIDA a las 19:31:01), en frío, app fuera de Recientes y pantalla bloqueada. 6 oct: 0–3 min. 37,5 s con GPS en vivo (S4) |
+| ≤ 1 transición falsa por día quieto | **Cumple con reservas** | 1 pareja Exit/Enter falsa en ~20 h en casa el 6 oct (01:47, separadas 4,8 s; el Exit con fix de ±100 m y radio de 100 m). El 9 y 10 oct no se identificó ningún falso. Depende de no poner el borde donde se pasa tiempo |
 | Batería ≤ 3 % por jornada | **Probable (decisión del usuario: se deja así, no se medirá más)** | GeoCheck = 3,35 % del *uso total* (cuota de consumo, no % de batería), CPU 4 min 10 s, GPS 15 min 46 s casi todo del panel en vivo. Falta el denominador (cuánto % total se consumió en ese periodo) |
 | Funciona con la app cerrada | **Confirmado** | 4 eventos con el proceso muerto (JS recién cargado, ~0,98 s, app en segundo plano) y un cruce real (15:45) |
 | Tras reiniciar el teléfono | **Confirmado** | Apagado por batería, encendido sin abrir la app: Expo re-registró la geocerca (el ENTER de las 12:46) y 3 h después se detectó una salida real |
-| Con la app deslizada de Recientes | **Sin medir (riesgo principal)** | El usuario nunca la deslizó. «Proceso muerto» en los eventos es el estado normal tras una tarea headless, no equivale a haberla cerrado a la fuerza |
+| Con la app deslizada de Recientes | **Confirmado (escenario 3, 8 oct)** | App quitada de Recientes, pantalla bloqueada, MIUI con «Ahorro de batería (recomendado)», radio de 100 m: salida, entrada y otra salida detectadas, en frío y en segundo plano |
+| Sin datos móviles | **Confirmado** | 9 y 10 oct: a ratos sin datos móviles, y los eventos se registraron igual. La detección es del sistema (geocercas de Android), no usa la red; el laboratorio no depende del servidor |
 
 ## Qué pasó en cada evento fuera del primer plano
 
@@ -42,6 +44,41 @@ requisitos de abajo y queda **condicionada al resultado del escenario 3**.
 Las pruebas del 7 oct (S6–S9, en coche, panel en vivo) y las de S4 no miden latencia en segundo plano: los marcadores se
 tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema ya había avisado.
 
+## Escenario 3 y verdad de campo (8–10 oct)
+
+**Escenario 3 (8 oct, sesión S10).** App quitada de Recientes, pantalla bloqueada, MIUI con «Ahorro de batería
+(recomendado)», radio de 100 m. Horas tomadas con reloj por el usuario (no se capturaron en la app):
+
+| Cruce del borde | Evento | Latencia | Lectura |
+|---|---|---|---|
+| Salida a las 19:28:36 (llegó a la meta a las 19:29:27) | SALIDA 19:31:01 | **2 min 25 s** | Real, en frío y en segundo plano |
+| Regreso a las 19:43:17 | ENTRADA 19:43:59 | **42 s** | Real, en frío |
+| Salió ~28 m a las 19:50:02 | SALIDA 19:50:02 | — | **Real**: la casa del usuario queda muy cerca del borde |
+
+La vibración funcionó con la app cerrada (fuerte, como un mensaje de WhatsApp). **No sonó** aunque el sonido del teléfono estaba
+activo: es lo esperado, el canal del laboratorio es solo de vibración. Esto cierra el pendiente de la vibración con la app cerrada.
+
+**Verdad de campo del 9 y 10 oct** (la sesión siguió activa; el estacionamiento queda dentro del círculo y la casa justo
+afuera, así que cada pareja ENTRADA → SALIDA es ir al coche y volver a casa): 9 oct 12:16/12:20, 14:18/14:22 y 22:06/22:12; 10 oct
+07:53/08:35 y 16:27/16:33. Son **cruces reales**, no falsos. Estos días a veces no había datos móviles y los eventos se
+registraron igual. Esas horas no se tomaron con reloj: sirven para contar detecciones, no para medir latencia.
+
+**No se toma en cuenta** el «FALLA» del resumen de la app: los cruces no se capturaron en ella y la batería mezcla cargas y uso
+normal. Manda el log crudo y las horas de reloj.
+
+### Lecciones
+
+- **Los falsos positivos vienen de la mala precisión.** El par falso del 6 oct (01:47, 4,8 s) llegó con un fix de ±100 m. Con
+  radio de 100 m, un fix así basta para cruzar el borde sin moverse. Por eso el filtro contra rebotes y la confirmación con una
+  posición fresca son requisitos (abajo), no un detalle.
+- **El borde no debe quedar donde la gente pasa mucho tiempo.** La casa del usuario queda a ~28 m del borde y salió una SALIDA
+  real tras un paso corto. En una obra real, el radio y el centro deben dejar el borde lejos de la entrada, el estacionamiento
+  y el lugar donde se descansa. La app debe aconsejarlo al crear la obra (se tiene en cuenta en la rebanada D, editor de mapa).
+- **Dentro del círculo el cruce es limpio; en el borde no.** Los 10 eventos del 9 y 10 oct fueron cruces reales porque el coche
+  queda dentro y la casa fuera con margen; la ambigüedad aparece solo cerca del borde.
+- **Sin datos móviles sigue detectando.** La detección es del sistema; lo que sí necesita red es sincronizar (cola local en la
+  rebanada 2, ver el plan).
+
 ## Hallazgos que no estaban en el plan
 
 - **Estado inicial.** Expo registra con `INITIAL_TRIGGER_ENTER | INITIAL_TRIGGER_EXIT`: al registrar (o volver a registrar)
@@ -56,16 +93,15 @@ tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema y
   nunca se pulsaron: **no está verificada**.
 - **Vibración**: ver «Notificaciones» abajo.
 
-## Qué falta medir (en orden)
+## Qué quedó sin medir (el usuario cerró el spike el 2026-10-10)
 
-1. **Escenario 3** (app deslizada de Recientes): 5 salidas y 5 entradas caminando, panel apagado, hora exacta del cruce
-   con reloj (HH:MM:SS), sin abrir la app entre cruces. Es lo que decide la rebanada 2.
-2. **Escenario 10** (salida con el teléfono bloqueado y sin tocarlo 10 min): latencia sin interacción.
-3. **Entradas reales** en segundo plano: ninguna medida.
-4. **Noches quietas** (escenario 6): al menos 2 más, para estimar los falsos por día con un solo dato.
-5. **Batería**: el denominador (cuánto % total se consumió desde la última carga) o un día sin panel en vivo.
-6. Poco prioritarios: ahorro de batería global del sistema (escenario 5), permisos reducidos (8), y «Sin restricciones»
-   (9), que solo importa si el escenario 3 falla.
+El laboratorio no recibe nada más. Lo siguiente no se midió y, si importa, se vigila con la app real:
+
+1. **Más cruces con hora de reloj** (el escenario 3 fue de 3 cruces; las parejas del 9 y 10 oct no se cronometraron).
+2. **Noches quietas** (escenario 6): solo hay una noche medida, con un falso.
+3. **Batería**: «probable», decisión del usuario de no medir más.
+4. Ahorro de batería global del sistema (escenario 5), permisos reducidos (8) y «Sin restricciones» (9): ya no condicionan nada,
+   porque el escenario 3 pasó con los ajustes por defecto.
 
 ## Requisitos para la rebanada 2 (fichaje)
 
@@ -80,14 +116,17 @@ tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema y
    como «estimada».
 4. **Hora del evento**: la tarea escribe cuando corre, no cuando se cruzó el borde; guardar siempre el fix (precisión y
    antigüedad) junto con cada evento. Se observaron antigüedades de hasta 89 s.
-5. **Latencias de hasta ~3 min**: la interfaz distingue «detectado» de «confirmado». Las correcciones de horas (RF-08)
-   no se hacen en el móvil: van en el panel web, con motivo (US-09, rebanada W; ver [plan-de-rebanadas.md](plan-de-rebanadas.md)).
-6. **Sin conexión**: la tarea headless no puede depender de la red; la cola local con sincronización posterior es parte
-   de la rebanada 3.
+5. **Latencias de hasta ~3 min** (medidas: 42 s y 2 min 25 s): la interfaz distingue «detectado» de «confirmado». Las
+   correcciones de horas con motivo (RF-08, US-09) van en el panel web **y también en el móvil** (decisión del 2026-10-10; ver
+   [plan-de-rebanadas.md](plan-de-rebanadas.md)).
+6. **Sin conexión**: la tarea headless no puede depender de la red; la cola local de fichajes pendientes con sincronización
+   posterior **se adelantó a la rebanada 2** (decisión del 2026-10-10). La detección funciona sin datos móviles (medido).
 7. **No depender de notificaciones fijas ni de botones** para el fichaje; el fichaje manual es el respaldo.
-8. **Radio mínimo de 100 m** (el mismo radio con un fix de ±100 m produjo un falso); por defecto 150 m.
-9. **Si el escenario 3 falla** (la geocerca se pierde al deslizar la app): guía de incorporación (bloquear la app en
-   Recientes, inicio automático) y valorar un servicio en primer plano como respaldo. Si no falla, basta la guía.
+8. **Radio mínimo de 100 m** (el mismo radio con un fix de ±100 m produjo un falso); por defecto 150 m. Al crear una obra,
+   avisar de que el borde no debe quedar donde la gente pasa mucho tiempo.
+9. **El escenario 3 pasó** (la geocerca sobrevive al deslizar la app con los ajustes por defecto de MIUI): basta una guía de
+   incorporación opcional (por ejemplo, no deslizar la app en teléfonos con ahorro agresivo). No hace falta un servicio en
+   primer plano.
 10. **Reconciliar al abrir la app** aunque todo funcione: es barato y cubre cualquier pérdida silenciosa de Google Play
     Services, que la app no puede ver (`hasStartedGeofencingAsync` solo consulta el registro de Expo).
 11. **Límite de 100 geocercas por app** (documentación oficial de Android): con muchas obras hay que registrar solo las
@@ -112,9 +151,11 @@ tocaron guiándose por el panel y, salvo en S4, **después** de que el sistema y
   aplicar a propósito para no cambiar el APK en mitad de las pruebas. **Aplicado en el código el 2026-10-08**, junto con los
   parches de `expo` (57.0.27), `expo-constants` (57.0.21) y `expo-notifications` (57.0.22); falta compilar el APK `spike`
   nuevo (verificado en el código nativo de `expo-notifications` 57.0.22: la vibración sigue atada a ese flag).
-- **Con la app cerrada** no interviene ningún manejador y el canal sí pide vibración (`setVibrationPattern` +
-  `enableVibration`), así que el bloqueo está en el teléfono: revisar en MIUI Ajustes › Notificaciones › GeoCheck › canal
-  «Detección de cruces (vibra)» (vibración activada), «Vibrar en modo silencioso» y No molestar. Pendiente de confirmar.
+- **Con la app cerrada** no interviene ningún manejador y el canal pide vibración (`setVibrationPattern` + `enableVibration`).
+  **Confirmado en el escenario 3 (8 oct): vibró fuerte, como un mensaje de WhatsApp.** No sonó porque el canal es solo de
+  vibración. Para la app real, el usuario pide vibración y sonido por defecto, configurable por cada persona en «Más»: en Android
+  el sonido y la vibración de un canal **no se pueden cambiar desde la app una vez creado**, así que la rebanada 2 necesitará un
+  canal por opción (vibración y sonido, solo vibración, silencioso) y elegir el canal al notificar.
 
 ## Cosas que no se midieron bien y por qué
 

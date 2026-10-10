@@ -1,6 +1,6 @@
 # Plan de rebanadas
 
-Última actualización: 2026-10-08 · Producto de referencia: Supercrew (antes ConstructionClock), ver
+Última actualización: 2026-10-10 · Producto de referencia: Supercrew (antes ConstructionClock), ver
 [Analisis_Requisitos_ConstructionClock.md](../Analisis_Requisitos_ConstructionClock.md) · Historias: [User_Stories.md](../User_Stories.md)
 
 Este documento fija el orden y el alcance. **Nada entra al plan sin aprobación**: lo decidido está en «Decidido»; lo que
@@ -11,14 +11,15 @@ propongo y falta confirmar va marcado como *propuesto* o en «Por confirmar». C
 | # | Rebanada | Estado | Historias |
 |---|---|---|---|
 | 0 | Base multi-tenant, autenticación con roles, invitaciones | Hecha | US-12 |
-| — | Spike de geofencing | Veredicto: viable con condiciones ([resultado](spike-resultado.md)); falta el escenario 3 | RNF-01, RNF-03 |
-| 1 | Proyectos: crear, ver, editar y archivar; ubicación con GPS, coordenadas, mapa o dirección | Implementada; falta probar la búsqueda con direcciones reales y el mapa (development build con la clave de Google) | US-11 |
-| 2 | Fichaje automático y manual | Siguiente | US-01, US-02, US-03; US-04 (*propuesto*: totales simples) |
+| — | Spike de geofencing | **Cerrado el 2026-10-10: viable** ([resultado](spike-resultado.md)); el escenario 3 pasó | RNF-01, RNF-03 |
+| 1 | Proyectos: crear, ver, editar y archivar; ubicación con GPS, coordenadas, mapa o dirección | Implementada, con autocompletado de Google y punto azul; falta probar el mapa y la búsqueda en el teléfono (development build con la clave de Google) | US-11 |
+| D | **Diseño** (identidad visual, navegación por pestañas y rediseño de las pantallas que ya existen) | **Aprobada el 2026-10-10**; en curso, orden D0 → D6 (ver «Rebanada D») | — |
+| 2 | Fichaje automático y manual, **con la cola de fichajes pendientes sin conexión** | Siguiente, después de la D | US-01, US-02, US-03, US-21; US-04 (*propuesto*: totales simples) |
 | W | **Panel web mínimo** | Alcance por aprobar antes de empezar | US-09, US-13, US-14, US-15, US-24 |
-| 3 | Sin conexión y batería | | US-21, US-22 |
+| 3 | Batería (la cola sin conexión pasó a la rebanada 2) | | US-22 |
 | 5 | Supervisor | | US-07, US-08 |
 
-Orden decidido: **2 → W → 3 → 5**. La antigua rebanada 4 (reportes y exportación) desaparece: se hace en W.
+Orden decidido: **D → 2 → W → 3 → 5**. La antigua rebanada 4 (reportes y exportación) desaparece: se hace en W.
 
 ## Decidido (2026-10-08)
 
@@ -42,6 +43,46 @@ Orden decidido: **2 → W → 3 → 5**. La antigua rebanada 4 (reportes y expor
   `expo-constants` (57.0.21) y `expo-notifications` (57.0.22) quedaron aplicados en el código el 2026-10-08, al preparar el
   build con la clave de Google Maps. La vibración solo se nota en el APK `spike`; al instalarlo, el usuario revisa en el
   teléfono el canal de notificaciones (vibración, no molestar).
+
+## Decidido (2026-10-10)
+
+- **Spike cerrado: viable.** Escenario 3 pasado (latencias de 2 min 25 s en salida y 42 s en entrada), la detección funciona sin
+  datos móviles, y la vibración con la app cerrada funcionó. Lecciones: falsos positivos con mala precisión y el borde no debe
+  quedar donde la gente pasa mucho tiempo. No se agrega nada más al laboratorio.
+- **Cola de fichajes pendientes sin conexión: adelantada a la rebanada 2** (antes en la 3). En obras sin señal no se deben perder
+  horas. La rebanada 3 queda solo con la batería (US-22).
+- **Corregir días con motivo (US-09), también en el móvil**, no solo en el panel web, porque el dueño usa sobre todo el teléfono.
+  Se detalla al empezar la rebanada 2.
+- **Notificaciones de la app real:** el fichaje automático avisa con vibración y sonido por defecto, y cada persona lo cambia en
+  «Más». En Android el sonido y la vibración de un canal no se cambian desde la app una vez creado: se necesita un canal por opción.
+  Se detalla en la rebanada 2.
+
+## Rebanada D: diseño (aprobada el 2026-10-10)
+
+Propuesta y maqueta: [vista previa](https://claude.ai/artifact/BZL1RtYGwmVF2enJ6NfJFP). Identidad: verde obra `#1E6B3C`, amarillo
+chaleco `#F5B700` (avisos), ladrillo `#B6341C` (salida y errores), papel `#F5F4EF`, tinta `#17231C`; Barlow Condensed (títulos
+y números) y Public Sans (texto); íconos de contorno de trazo único; símbolo propio de la marca (pin, anillo punteado, palomita).
+Navegación por pestañas inferiores según el rol: administrador y supervisor, Inicio · Obras · Registros · Equipo · Más;
+empleado, Inicio · Obras · Registros · Más; contador, Obras · Registros · Más. Barra propia sobre la navegación por estado actual.
+
+**Orden:** D0 base (colores, letras, íconos, piezas y archivo de textos) → D1 estructura (pestañas por rol, «atrás», Más) → D2 acceso
+(login, registro, unirse) → D3 editor de obra con mapa (y la columna `address`) → D4 lista de Obras → D5 Inicio y Equipo → D6 ícono y
+pantalla de arranque, accesibilidad, documentación y pruebas.
+
+**Ajustes aprobados:**
+
+- **Inicio centrado en el estado, no en el botón.** La app ficha sola, así que el Inicio muestra en grande el estado actual
+  («Dentro de [obra] desde 7:02 · automático» o «Fuera de obra») y el botón manual de registrar entrada o salida queda como
+  respaldo, más discreto. En D se diseña ese estado; el fichaje real llega en la rebanada 2.
+- **Textos centralizados desde ahora:** todos los textos de la interfaz en un solo archivo en español, para traducir (US-23) sin
+  tocar cada pantalla. El cambio de idioma no se implementa todavía.
+- **Dependencias nuevas** (`react-native-svg`, íconos, `expo-font` con las dos tipografías, deslizador): se juntan en el próximo
+  development build.
+- **Dirección guardada en cada obra** (columna `address` opcional; las obras viejas muestran coordenadas).
+- **Miniatura del mapa en las tarjetas** con `react-native-maps` en modo ligero (lite mode, solo Android) y, si va lento, un recuadro
+  con ícono. Sin la API de imágenes estáticas de Google.
+- **Fuera de D:** el contenido de Registros, el fichaje real, el modo oscuro, el cambio de idioma, presupuestos, tareas, fotos y
+  notas, y deslizar tarjetas para acciones.
 
 ## Estado actual de los datos (verificado en el backend)
 
@@ -96,8 +137,10 @@ calcula W; la rebanada 2 tiene que dejar los datos listos. Se detalla y se aprue
 
 ## Editar horas con motivo (US-09) en W
 
-- Hoy `PATCH /time-entries/:id` edita sin motivo y solo recuerda la última edición. En W se endurece: motivo obligatorio y un
-  historial (quién, cuándo, motivo, valores anterior y nuevo). Hasta entonces la app móvil no expone edición.
+- Hoy `PATCH /time-entries/:id` edita sin motivo y solo recuerda la última edición. Se endurece: motivo obligatorio y un
+  historial (quién, cuándo, motivo, valores anterior y nuevo). **Decidido el 2026-10-10: la corrección con motivo también va en el
+  móvil**, no solo en la web; el endurecimiento del servidor y la pantalla móvil se detallan al empezar la rebanada 2 (la lectura de
+  fichajes que necesita la pantalla Registros), y la web la reutiliza en W. Hasta entonces la app móvil no expone edición.
 - Al corregir una entrada se recalculan los totales y el traslado (US-24).
 
 ## Borrador del alcance de W (no aprobado)
@@ -135,6 +178,16 @@ oficial, la tecnología del panel y dónde se aloja (la app es gratuita).
    cómo se combinan los umbrales diario y semanal sin contar dos veces las mismas horas extra.
 5. **US-13 «por cuadrilla»:** las cuadrillas son US-17 (Fase 2). *Propuesto*: reportes por empleado y proyecto, salvo que subas US-17.
 6. **Zona horaria:** hace falta para delimitar días y semanas; la propuesta está en la tabla de ajustes.
+
+## Ideas para revisar después (2026-10-08, no aprobadas ni planificadas)
+
+Salen de revisar la app de referencia. Ninguna se implementa sin aprobarla antes.
+
+- **Horario de la obra:** que el fichaje automático solo ocurra dentro de un horario configurado por obra. Ayudaría contra los
+  falsos positivos de la geocerca (por ejemplo, pasar por la obra fuera de horario). Habría que decidir qué pasa con un fichaje
+  manual fuera de horario y cómo se combina con el horario de la organización.
+- **Evitar el registro automático por obra:** un ajuste por obra para que ese proyecto solo admita fichaje manual, aunque el
+  empleado use el método automático.
 
 ## Fuera del MVP
 

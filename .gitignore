@@ -29,3 +29,6 @@ npm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# Capturas de referencia de otras apps (solo para consulta local; no se suben)
+docs/referencias/
