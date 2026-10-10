@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, Share, StyleSheet, Text, View } from "react-native";
-import { useBackHandler } from "../hooks/useBackHandler";
 import { errorMessage } from "../services/errors";
 import { createInvitation, listInvitations, revokeInvitation } from "../services/invitationService";
 import { ROLE_LABELS, type InvitableRole, type Invitation, type InvitationStatus, type SessionUser } from "../types";
@@ -33,15 +32,14 @@ async function shareInvitation(invitation: Invitation, organizationName: string)
   }
 }
 
-export default function InvitationsScreen({ user, onBack }: { user: SessionUser; onBack: () => void }) {
+// Pestaña Equipo del administrador. Se rediseña en D5; hasta entonces conserva su aspecto anterior.
+export default function InvitationsScreen({ user }: { user: SessionUser }) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [role, setRole] = useState<InvitableRole>("EMPLOYEE");
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useBackHandler(useCallback(() => onBack(), [onBack]));
 
   const load = useCallback(async () => {
     try {
@@ -110,7 +108,6 @@ export default function InvitationsScreen({ user, onBack }: { user: SessionUser;
 
   return (
     <View style={styles.container}>
-      <LinkButton title="‹ Volver" onPress={onBack} />
       <Text style={styles.title}>Invitar personas</Text>
 
       <Text style={styles.label}>Rol</Text>

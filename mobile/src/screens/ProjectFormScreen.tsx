@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Alert, Linking, StyleSheet, Text, View } from "react-native";
 import ProjectMapPicker, { type PickedLocation } from "../components/ProjectMapPicker";
-import { useBackHandler } from "../hooks/useBackHandler";
 import {
   centerFromDraft,
   changedFields,
@@ -38,8 +37,6 @@ export default function ProjectFormScreen({ user, project, onBack }: { user: Ses
   const [pasted, setPasted] = useState("");
   const pastedPair = useMemo(() => parseCoordinatePair(pasted), [pasted]);
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  useBackHandler(useCallback(() => onBack(), [onBack]));
 
   const setField = (field: keyof ProjectDraft) => (value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));

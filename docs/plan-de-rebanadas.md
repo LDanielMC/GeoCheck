@@ -69,7 +69,7 @@ empleado, Inicio · Obras · Registros · Más; contador, Obras · Registros · 
 (login, registro, unirse) → D3 editor de obra con mapa (y la columna `address`) → D4 lista de Obras → D5 Inicio y Equipo → D6 ícono y
 pantalla de arranque, accesibilidad, documentación y pruebas.
 
-**Avance:** D0 hecha (2026-10-10, pendiente de ver en el teléfono con el nuevo development build).
+**Avance:** D0 y D1 hechas (2026-10-10; D0 por revisar en el teléfono con el nuevo development build, D1 por revisar después).
 
 **Ajustes aprobados:**
 

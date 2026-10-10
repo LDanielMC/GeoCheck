@@ -1,20 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
-import { useBackHandler } from "../hooks/useBackHandler";
 import { formatCoords } from "../projects/rules";
 import { errorMessage } from "../services/errors";
 import { listProjects } from "../services/projectService";
 import type { Project, SessionUser } from "../types";
-import { Button, colors, ErrorText, LinkButton } from "../ui";
+import { texts } from "../texts";
+import { Button, colors, ErrorText } from "../ui";
 
-// Lista de proyectos de la organización. Todos los roles la ven; solo el ADMIN crea, edita y archiva.
+// Lista de proyectos de la organización (pestaña Obras). Todos los roles la ven; solo el ADMIN crea, edita y archiva.
+// Se rediseña en D4; hasta entonces conserva su aspecto anterior.
 export default function ProjectsScreen({
   user,
-  onBack,
   onOpenProject,
 }: {
   user: SessionUser;
-  onBack: () => void;
   /** null = proyecto nuevo */
   onOpenProject: (project: Project | null) => void;
 }) {
@@ -24,8 +23,6 @@ export default function ProjectsScreen({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const latestRequest = useRef(0);
-
-  useBackHandler(useCallback(() => onBack(), [onBack]));
 
   const load = useCallback(async () => {
     // Si el usuario cambia el filtro mientras carga, solo vale la respuesta más reciente.
@@ -64,8 +61,7 @@ export default function ProjectsScreen({
 
   return (
     <View style={styles.container}>
-      <LinkButton title="‹ Volver" onPress={onBack} />
-      <Text style={styles.title}>Proyectos</Text>
+      <Text style={styles.title}>{texts.tabs.projects}</Text>
 
       {isAdmin ? (
         <>
