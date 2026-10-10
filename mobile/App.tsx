@@ -24,6 +24,11 @@ if (SPIKE_MODE) {
 }
 const GeofenceLabScreen: React.ComponentType = SPIKE_MODE ? require("./src/screens/GeofenceLabScreen").default : () => null;
 
+// Galería de la base visual (EXPO_PUBLIC_DESIGN_GALLERY=1): solo para comprobar el diseño en el teléfono; el build normal
+// no la carga.
+const DESIGN_GALLERY = process.env.EXPO_PUBLIC_DESIGN_GALLERY === "1";
+const DesignGallery: React.ComponentType = DESIGN_GALLERY ? require("./src/design/Gallery").default : () => null;
+
 // Navegación por estado: pocas pantallas y sin dependencias extra. Se cambiará por una
 // librería de navegación cuando haya más pantallas (proyectos, reportes, mapa).
 type SignedOutScreen = "login" | "register" | "join";
@@ -82,6 +87,16 @@ export default function App() {
         <SafeAreaView style={styles.container}>
           <GeofenceLabScreen />
           <StatusBar style="auto" />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+  if (DESIGN_GALLERY) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <DesignGallery />
+          <StatusBar style="dark" />
         </SafeAreaView>
       </SafeAreaProvider>
     );

@@ -1,11 +1,12 @@
 import axios from "axios";
+import { texts } from "../texts";
 
 // Mensaje para mostrar al usuario a partir de cualquier error de una petición.
-export function errorMessage(error: unknown, fallback = "Ocurrió un error inesperado"): string {
+export function errorMessage(error: unknown, fallback: string = texts.common.unexpectedError): string {
   if (axios.isAxiosError(error)) {
     const serverMessage = error.response?.data?.error;
     if (typeof serverMessage === "string") return serverMessage;
-    if (!error.response) return "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.";
+    if (!error.response) return texts.common.connectionError;
     return fallback;
   }
   if (error instanceof Error) return error.message;

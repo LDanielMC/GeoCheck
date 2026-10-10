@@ -69,6 +69,8 @@ empleado, Inicio · Obras · Registros · Más; contador, Obras · Registros · 
 (login, registro, unirse) → D3 editor de obra con mapa (y la columna `address`) → D4 lista de Obras → D5 Inicio y Equipo → D6 ícono y
 pantalla de arranque, accesibilidad, documentación y pruebas.
 
+**Avance:** D0 hecha (2026-10-10, pendiente de ver en el teléfono con el nuevo development build).
+
 **Ajustes aprobados:**
 
 - **Inicio centrado en el estado, no en el botón.** La app ficha sola, así que el Inicio muestra en grande el estado actual

@@ -38,7 +38,20 @@
       [
         "expo-notifications",
         {
-          "color": "#3B6D11"
+          "color": "#1E6B3C"
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "node_modules/@expo-google-fonts/barlow-condensed/700Bold/BarlowCondensed_700Bold.ttf",
+            "node_modules/@expo-google-fonts/barlow-condensed/600SemiBold/BarlowCondensed_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/public-sans/400Regular/PublicSans_400Regular.ttf",
+            "node_modules/@expo-google-fonts/public-sans/500Medium/PublicSans_500Medium.ttf",
+            "node_modules/@expo-google-fonts/public-sans/600SemiBold/PublicSans_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/public-sans/700Bold/PublicSans_700Bold.ttf"
+          ]
         }
       ],
       "expo-status-bar",

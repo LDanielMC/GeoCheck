@@ -260,6 +260,28 @@ Si la clave se filtra, bórrala en Credentials y crea otra: no tiene efecto en l
 **Límites en el backend** (por usuario, en memoria, valen para una sola instancia): `PLACES_RATE_LIMIT_PER_MINUTE` (60) y
 `PLACES_RATE_LIMIT_PER_DAY` (300). Responden 429 y la app pasa al buscador del teléfono.
 
+## Diseño y textos (rebanada D)
+
+- **`mobile/src/design/`** es el sistema de diseño de GeoCheck: colores, escala tipográfica y medidas (`tokens.ts`), íconos
+  (`Icon.tsx`, Lucide, licencia ISC), el símbolo de la marca (`BrandMark.tsx`) y las piezas (botones, campos, chips, tarjetas,
+  avisos, hoja inferior, pantalla vacía, filas de lista). Las pantallas importan de `src/design`. `src/ui.tsx` es el diseño
+  anterior: lo usan el laboratorio del spike y las pantallas que aún no se migran, y desaparece de la app al terminar la D.
+- **Tipografías:** Barlow Condensed (títulos y números) y Public Sans (texto), de los paquetes `@expo-google-fonts`
+  (licencia libre). Viajan **dentro de la app** con el plugin `expo-font` de `app.json`, así que hace falta un development
+  build nuevo para verlas; en Expo Go se vería la letra del sistema. Android usa el nombre del archivo como familia; iOS, el
+  nombre PostScript (`src/design/fontFaces.ts`; una prueba comprueba que coincidan con `app.json` y con los archivos).
+- **Textos:** todos los textos de la interfaz van en `mobile/src/texts/es.ts`; las pantallas importan `texts` y no escriben
+  frases propias (`format()` para datos, `plural()` para cantidades). Cuando llegue el inglés (US-23) se añadirá un archivo
+  hermano. Las pantallas se migran al rediseñarse.
+- **Galería de la base visual** (solo para comprobar el diseño en el teléfono, con el development build instalado):
+
+  ```powershell
+  cd mobile
+  $env:EXPO_PUBLIC_DESIGN_GALLERY = "1"; npx expo start --dev-client --clear
+  ```
+
+  Abre la app y muestra colores, letra, íconos y piezas. Sin esa variable, la app arranca normal.
+
 ## Tests
 
 ```bash
