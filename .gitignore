@@ -32,3 +32,6 @@ Thumbs.db
 
 # Capturas de referencia de otras apps (solo para consulta local; no se suben)
 docs/referencias/
+
+# Contexto personal del proyecto (solo local)
+docs/contexto.md
